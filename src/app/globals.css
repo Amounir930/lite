@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-subtle: var(--border-subtle);
+}
+
+:root {
+  /* ☀️ Soft Light Mode (Refined Academic) */
+  --bg-base: #f1f5f9; /* Slate-100 */
+  --bg-surface: #ffffff;
+  --text-main: #0f172a; /* Slate-900 (Dark for Light Mode) */
+  --text-muted: #64748b; /* Slate-500 */
+  --border-subtle: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='dark'] {
+  /* 🌙 Deep Dark Mode (Slate-950) */
+  --bg-base: #020617;
+  --bg-surface: #0f172a;
+  --text-main: #f1f5f9; /* Light for Dark Mode */
+  --text-muted: #94a3b8; /* Slate-400 */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: 'Outfit', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+  }
+}
+
+@layer components {
+  .soft-card {
+    background: var(--bg-surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+  }
+  
+  [data-theme='dark'] .soft-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.4));
+  }
+
+  .text-primary-contrast {
+    color: var(--text-main);
+  }
+
+  .text-muted-contrast {
+    color: var(--text-muted);
+  }
+}
+
+/* 💠 Custom Utilities */
+.py-4\.5 { padding-top: 1.125rem; padding-bottom: 1.125rem; }
+.ps-12 { padding-inline-start: 3rem; }
+.pe-4 { padding-inline-end: 1rem; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }

@@ -1,0 +1,54 @@
+{
+  "Common": {
+    "dashboard": "Dashboard",
+    "contacts": "Contacts",
+    "chat": "Chat",
+    "automation": "Automation",
+    "reports": "Reports",
+    "users": "Users",
+    "settings": "Settings",
+    "system_admin": "System Administrator",
+    "search_placeholder": "Forensic search in system...",
+    "manage_permissions": "Manage Permissions",
+    "account_settings": "Account Settings",
+    "logout": "Logout",
+    "system_status": "System Status: Optimal",
+    "departments": "Departments",
+    "admin_center": "Admin Center"
+  },
+  "Dashboard": {
+    "title": "Central Dashboard",
+    "description": "Overview of system performance and ongoing operations.",
+    "total_contacts": "Total Contacts",
+    "daily_messages": "Daily Messages",
+    "response_rate": "Response Rate",
+    "campaign_growth": "Campaign Growth"
+  },
+  "Users": {
+    "title": "Team Management",
+    "description": "Add, edit, and control user permissions within the organization.",
+    "add_user": "Invite New User",
+    "table_user": "User",
+    "table_role": "Role",
+    "table_permissions": "Permissions",
+    "table_actions": "Actions",
+    "database_info": "Database: MongoDB Cloud Cluster",
+    "your_role": "Your Role"
+  },
+  "Departments": {
+    "title": "Departments & Teams",
+    "description": "Organize your enterprise by assigning staff to specialized departments and flexible teams.",
+    "add_department": "Add New Department",
+    "add_team": "Add Team",
+    "members": "Members",
+    "teams": "Sub-Teams",
+    "view_details": "View Admin Details"
+  },
+  "Admin": {
+    "title": "Unified Admin Center",
+    "description": "Comprehensive control over users, departments, and permissions from a single secure interface.",
+    "users_tab": "Users",
+    "depts_tab": "Depts & Teams",
+    "roles_tab": "Roles (RBAC)"
+  }
+}

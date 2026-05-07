@@ -1,0 +1,1466 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    WHATSAPP CRM SYSTEM - معايير الاختبار
+                         Testing Standards & Quality Assurance
+═══════════════════════════════════════════════════════════════════════════════
+
+📌 الإصدار: 1.0.0 | آخر تحديث: 2026-05-06
+📌 المؤلف: QA Lead Architect (30 Years Experience)
+📌 الحالة: إلزامي - لا يجوز تجاوز أي معيار دون موافقة QA
+
+═══════════════════════════════════════════════════════════════════════════════
+جدول المحتويات
+═══════════════════════════════════════════════════════════════════════════════
+1. استراتيجية الاختبار العامة
+2. اختبارات الوحدة (Unit Tests)
+3. اختبارات التكامل (Integration Tests)
+4. اختبارات E2E (End-to-End)
+5. اختبارات الأداء (Performance Tests)
+6. اختبارات الأمان (Security Tests)
+7. اختبارات الوصول (Accessibility Tests)
+8. اختبارات التوافق (Compatibility Tests)
+9. اختبارات التحميل (Load Tests)
+10. معايير التغطية (Coverage Standards)
+11. أدوات الاختبار (Testing Tools)
+12. CI/CD Integration
+13. تقارير الاختبار (Test Reporting)
+14. إدارة العيوب (Defect Management)
+15. خطة الاختبار لكل مرحلة
+
+═══════════════════════════════════════════════════════════════════════════════
+1. استراتيجية الاختبار العامة
+═══════════════════════════════════════════════════════════════════════════════
+
+▌1.1 هرمية الاختبار (Testing Pyramid)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        /
+       / \     E2E Tests (Playwright)          5%  ← أعلى التكلفة
+      /   \    ──────────────────────────────────────
+     /     \   Integration Tests (Vitest + MSW)  15%  ← تكلفة متوسطة
+    /       \  ──────────────────────────────────────
+   /_________\ Unit Tests (Vitest + RTL)        80%  ← أقل التكلفة
+
+▌1.2 مبادئ الاختبار
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Shift-Left Testing: الاختبار يبدأ من مرحلة التصميم
+• Automated First: تفضيل الاختبار الآلي على اليدوي
+• Independent Tests: كل اختبار مستقل عن الآخر
+• Deterministic: نفس المدخلات = نفس المخرجات دائماً
+• Fast Feedback: اختبارات الوحدة < 100ms لكل اختبار
+• Isolated: لا يوجد Side Effects بين الاختبارات
+
+▌1.3 أنواع الاختبارات المطلوبة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ Unit Tests        → جميع الدوال والمكونات والـ Hooks
+□ Integration Tests → تكامل API مع DB، تكامل Services
+□ E2E Tests         → تدفقات المستخدم الكاملة
+□ Performance Tests → Load, Stress, Spike, Endurance
+□ Security Tests    → OWASP Top 10, Penetration Testing
+□ Accessibility     → WCAG 2.1 AA Compliance
+□ Compatibility     → Browsers, Devices, RTL/LTR
+□ API Contract      → OpenAPI Schema Validation
+□ Visual Regression → UI Snapshot Comparison
+
+═══════════════════════════════════════════════════════════════════════════════
+2. اختبارات الوحدة (Unit Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌2.1 معايير اختبارات الوحدة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+الهدف: اختبار كل وحدة (دالة/مكون/hook) بمعزل عن التبعيات
+
+✅ إلزامي: تغطية ≥ 85% للوحدات الحرجة
+✅ إلزامي: كل دالة utility يجب أن يكون لها اختبار
+✅ إلزامي: كل hook مخصص يجب أن يكون له اختبار
+✅ إلزامي: كل مكون UI معقد يجب أن يكون له اختبار
+✅ إلزامي: Mock للـ External Dependencies
+❌ ممنوع: اختبار Implementation Details
+
+▌2.2 هيكل اختبار الوحدة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/unit/services/contact-service.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ContactService } from '@/services/contact-service'
+import { IContactRepository } from '@/types/contact'
+
+// Arrange - ترتيب البيانات
+// Act - تنفيذ العملية
+// Assert - التحقق من النتيجة
+
+describe('ContactService', () => {
+  let mockRepository: IContactRepository
+  let service: ContactService
+
+  beforeEach(() => {
+    mockRepository = {
+      create: vi.fn(),
+      findById: vi.fn(),
+      findAll: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    }
+    service = new ContactService(mockRepository)
+  })
+
+  describe('create', () => {
+    it('should create a new contact with valid data', async () => {
+      // Arrange
+      const data = {
+        name: 'Ahmed Mohammed',
+        phone: '+966501234567',
+        email: 'ahmed@example.com',
+      }
+      const expectedContact = { id: 'uuid-1', ...data }
+      mockRepository.create.mockResolvedValue(expectedContact)
+
+      // Act
+      const result = await service.create(data)
+
+      // Assert
+      expect(result).toEqual(expectedContact)
+      expect(mockRepository.create).toHaveBeenCalledWith(data)
+      expect(mockRepository.create).toHaveBeenCalledTimes(1)
+    })
+
+    it('should throw ValidationError when phone is invalid', async () => {
+      // Arrange
+      const data = { name: 'Test', phone: 'invalid' }
+
+      // Act & Assert
+      await expect(service.create(data)).rejects.toThrow('Invalid phone number')
+    })
+
+    it('should throw ConflictError when phone already exists', async () => {
+      // Arrange
+      const data = { name: 'Test', phone: '+966501234567' }
+      mockRepository.findByPhone = vi.fn().mockResolvedValue({ id: 'existing' })
+
+      // Act & Assert
+      await expect(service.create(data)).rejects.toThrow('Phone already exists')
+    })
+  })
+
+  describe('findAll', () => {
+    it('should return paginated contacts', async () => {
+      // Arrange
+      const filters = { page: 1, limit: 20, status: 'active' }
+      const expected = {
+        contacts: [{ id: '1', name: 'Contact 1' }],
+        total: 100,
+      }
+      mockRepository.findAll.mockResolvedValue(expected)
+
+      // Act
+      const result = await service.findAll(filters)
+
+      // Assert
+      expect(result.contacts).toHaveLength(1)
+      expect(result.total).toBe(100)
+    })
+  })
+})
+
+▌2.3 اختبارات المكونات (Component Tests)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/unit/components/contact-card.test.tsx
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { ContactCard } from '@/components/features/crm/contact-card'
+
+describe('ContactCard', () => {
+  const mockContact = {
+    id: 'uuid-1',
+    name: 'Ahmed Mohammed',
+    phone: '+966501234567',
+    status: 'active',
+    tags: [{ id: 't1', name: 'Hot Lead', color: '#FF5722' }],
+  }
+
+  it('should display contact name and phone', () => {
+    // Arrange
+    render(<ContactCard contact={mockContact} onSelect={vi.fn()} />)
+
+    // Assert
+    expect(screen.getByText('Ahmed Mohammed')).toBeInTheDocument()
+    expect(screen.getByText('+966501234567')).toBeInTheDocument()
+  })
+
+  it('should display tags with correct colors', () => {
+    // Arrange
+    render(<ContactCard contact={mockContact} onSelect={vi.fn()} />)
+
+    // Assert
+    const tag = screen.getByText('Hot Lead')
+    expect(tag).toHaveStyle({ backgroundColor: '#FF5722' })
+  })
+
+  it('should call onSelect when clicked', () => {
+    // Arrange
+    const onSelect = vi.fn()
+    render(<ContactCard contact={mockContact} onSelect={onSelect} />)
+
+    // Act
+    fireEvent.click(screen.getByRole('button'))
+
+    // Assert
+    expect(onSelect).toHaveBeenCalledWith('uuid-1')
+    expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  it('should show skeleton when loading', () => {
+    // Arrange
+    render(<ContactCard contact={null} isLoading={true} onSelect={vi.fn()} />)
+
+    // Assert
+    expect(screen.getByTestId('contact-skeleton')).toBeInTheDocument()
+  })
+})
+
+▌2.4 اختبارات الـ Hooks
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/unit/hooks/use-contacts.test.ts
+import { describe, it, expect, vi } from 'vitest'
+import { renderHook, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useContacts } from '@/hooks/use-contacts'
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
+
+describe('useContacts', () => {
+  it('should fetch contacts successfully', async () => {
+    // Arrange
+    const mockContacts = [{ id: '1', name: 'Contact 1' }]
+    vi.mocked(contactService.getAll).mockResolvedValue({
+      contacts: mockContacts,
+      total: 1,
+    })
+
+    // Act
+    const { result } = renderHook(() => useContacts({ page: 1 }), {
+      wrapper: createWrapper(),
+    })
+
+    // Assert
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.contacts).toEqual(mockContacts)
+    expect(result.current.error).toBeNull()
+  })
+
+  it('should handle error state', async () => {
+    // Arrange
+    vi.mocked(contactService.getAll).mockRejectedValue(new Error('Network error'))
+
+    // Act
+    const { result } = renderHook(() => useContacts({ page: 1 }), {
+      wrapper: createWrapper(),
+    })
+
+    // Assert
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error?.message).toBe('Network error')
+  })
+})
+
+▌2.5 اختبارات الـ Validators
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/unit/validators/contact.test.ts
+import { describe, it, expect } from 'vitest'
+import { CreateContactSchema } from '@/lib/validators/contact'
+
+describe('CreateContactSchema', () => {
+  it('should validate valid contact data', () => {
+    const data = {
+      name: 'Ahmed Mohammed',
+      phone: '+966501234567',
+      email: 'ahmed@example.com',
+    }
+    expect(() => CreateContactSchema.parse(data)).not.toThrow()
+  })
+
+  it('should reject invalid phone number', () => {
+    const data = { name: 'Test', phone: '123' }
+    expect(() => CreateContactSchema.parse(data)).toThrow()
+  })
+
+  it('should reject name shorter than 2 characters', () => {
+    const data = { name: 'A', phone: '+966501234567' }
+    expect(() => CreateContactSchema.parse(data)).toThrow()
+  })
+
+  it('should accept optional email', () => {
+    const data = { name: 'Test', phone: '+966501234567' }
+    expect(() => CreateContactSchema.parse(data)).not.toThrow()
+  })
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+3. اختبارات التكامل (Integration Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌3.1 معايير اختبارات التكامل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+الهدف: اختبار تكامل المكونات مع بعضها (API + DB + Services)
+
+✅ إلزامي: اختبار جميع API Routes
+✅ إلزامي: اختبار تكامل Database Operations
+✅ إلزامي: اختبار Authentication Flow
+✅ إلزامي: اختبار WebSocket/Pusher Integration
+✅ إلزامي: MSW (Mock Service Worker) للـ External APIs
+❌ ممنوع: الاتصال بـ APIs حقيقية في الاختبارات
+
+▌3.2 اختبارات API Routes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/integration/api/contacts.test.ts
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createTestDatabase, teardownTestDatabase } from '@/tests/helpers/db'
+import { createTestUser, getAuthToken } from '@/tests/helpers/auth'
+
+describe('Contacts API', () => {
+  let db: ReturnType<typeof createTestDatabase>
+  let authToken: string
+  let testUser: { id: string; tenantId: string }
+
+  beforeAll(async () => {
+    db = createTestDatabase()
+    testUser = await createTestUser(db)
+    authToken = await getAuthToken(testUser)
+  })
+
+  afterAll(async () => {
+    await teardownTestDatabase(db)
+  })
+
+  describe('POST /api/contacts', () => {
+    it('should create contact with valid data', async () => {
+      // Arrange
+      const data = {
+        name: 'New Contact',
+        phone: '+966509876543',
+        email: 'new@example.com',
+      }
+
+      // Act
+      const response = await fetch('http://localhost:3000/api/contacts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      // Assert
+      expect(response.status).toBe(201)
+      const result = await response.json()
+      expect(result.success).toBe(true)
+      expect(result.data.contact.name).toBe(data.name)
+      expect(result.data.contact.phone).toBe(data.phone)
+    })
+
+    it('should return 400 for invalid data', async () => {
+      // Arrange
+      const data = { name: '', phone: 'invalid' }
+
+      // Act
+      const response = await fetch('http://localhost:3000/api/contacts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      // Assert
+      expect(response.status).toBe(400)
+      const result = await response.json()
+      expect(result.success).toBe(false)
+      expect(result.error.code).toBe('VALID_001')
+    })
+
+    it('should return 401 without auth token', async () => {
+      // Act
+      const response = await fetch('http://localhost:3000/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Test', phone: '+966501234567' }),
+      })
+
+      // Assert
+      expect(response.status).toBe(401)
+    })
+  })
+
+  describe('GET /api/contacts', () => {
+    it('should return paginated contacts', async () => {
+      // Act
+      const response = await fetch(
+        'http://localhost:3000/api/contacts?page=1&limit=10',
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      )
+
+      // Assert
+      expect(response.status).toBe(200)
+      const result = await response.json()
+      expect(result.success).toBe(true)
+      expect(Array.isArray(result.data.contacts)).toBe(true)
+      expect(result.meta).toHaveProperty('page')
+      expect(result.meta).toHaveProperty('total')
+    })
+  })
+})
+
+▌3.3 اختبارات Service Integration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/integration/services/whatsapp-service.test.ts
+import { describe, it, expect, vi } from 'vitest'
+import { WhatsAppService } from '@/services/whatsapp-service'
+import { EvolutionAPI } from '@/lib/whatsapp/evolution-api'
+
+describe('WhatsAppService Integration', () => {
+  it('should send message through Evolution API', async () => {
+    // Arrange
+    const mockEvolution = vi.mocked(EvolutionAPI)
+    mockEvolution.sendMessage.mockResolvedValue({ messageId: 'msg-123' })
+
+    const service = new WhatsAppService()
+
+    // Act
+    const result = await service.sendMessage({
+      to: '+966501234567',
+      content: 'Test message',
+      sessionId: 'session-1',
+    })
+
+    // Assert
+    expect(result.messageId).toBe('msg-123')
+    expect(mockEvolution.sendMessage).toHaveBeenCalledWith({
+      to: '+966501234567',
+      content: 'Test message',
+      sessionId: 'session-1',
+    })
+  })
+
+  it('should handle API failure with retry', async () => {
+    // Arrange
+    const mockEvolution = vi.mocked(EvolutionAPI)
+    mockEvolution.sendMessage
+      .mockRejectedValueOnce(new Error('Timeout'))
+      .mockResolvedValueOnce({ messageId: 'msg-456' })
+
+    const service = new WhatsAppService()
+
+    // Act
+    const result = await service.sendMessage({
+      to: '+966501234567',
+      content: 'Test message',
+      sessionId: 'session-1',
+    })
+
+    // Assert
+    expect(result.messageId).toBe('msg-456')
+    expect(mockEvolution.sendMessage).toHaveBeenCalledTimes(2)
+  })
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+4. اختبارات E2E (End-to-End)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌4.1 معايير E2E
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+الهدف: اختبار تدفقات المستخدم الكاملة من البداية للنهاية
+
+✅ إلزامي: 100% تغطية للسيناريوهات الحرجة
+✅ إلزامي: اختبار على بيئة Staging (مطابقة للإنتاج)
+✅ إلزامي: Parallel Execution لتقليل الوقت
+✅ إلزامي: Video Recording للاختبارات الفاشلة
+✅ إلزامي: Screenshot على كل خطأ
+❌ ممنوع: Mock للـ Database في E2E
+
+▌4.2 سيناريوهات E2E الحرجة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SC-001: تسجيل الدخول → إرسال رسالة → تلقي رد
+SC-002: إنشاء حملة → جدولة → إرسال → تتبع
+SC-003: Flow Builder: إنشاء سيناريو → اختبار → نشر
+SC-004: CRM: إضافة عميل → تصنيف → تعيين → متابعة
+SC-005: ربط واتساب → إرسال رسالة → تلقي رد
+SC-006: إنشاء فريق → إضافة أعضاء → تعيين صلاحيات
+SC-007: إنشاء قالب → استخدام في حملة → إرسال
+SC-008: تغيير اللغة (RTL/LTR) → التحقق من التخطيط
+
+▌4.3 أمثلة E2E Tests
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/e2e/auth-flow.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('Authentication Flow', () => {
+  test('user can login and access dashboard', async ({ page }) => {
+    // Step 1: Navigate to login
+    await page.goto('/login')
+    await expect(page).toHaveTitle(/Login/)
+
+    // Step 2: Fill credentials
+    await page.fill('[data-testid="email-input"]', 'admin@example.com')
+    await page.fill('[data-testid="password-input"]', 'SecurePass123!')
+
+    // Step 3: Submit
+    await page.click('[data-testid="login-button"]')
+
+    // Step 4: Verify redirect
+    await expect(page).toHaveURL('/dashboard')
+    await expect(page.locator('[data-testid="user-name"]')).toHaveText('Admin User')
+  })
+
+  test('user sees error on invalid credentials', async ({ page }) => {
+    await page.goto('/login')
+    await page.fill('[data-testid="email-input"]', 'wrong@example.com')
+    await page.fill('[data-testid="password-input"]', 'wrongpass')
+    await page.click('[data-testid="login-button"]')
+
+    await expect(page.locator('[data-testid="error-message"]')).toContainText('Invalid credentials')
+    await expect(page).toHaveURL('/login')
+  })
+})
+
+// tests/e2e/contact-management.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('Contact Management', () => {
+  test('create contact and verify in list', async ({ page }) => {
+    // Login first
+    await page.goto('/login')
+    await page.fill('[data-testid="email-input"]', 'admin@example.com')
+    await page.fill('[data-testid="password-input"]', 'SecurePass123!')
+    await page.click('[data-testid="login-button"]')
+    await expect(page).toHaveURL('/dashboard')
+
+    // Navigate to contacts
+    await page.click('[data-testid="contacts-menu"]')
+    await expect(page).toHaveURL('/contacts')
+
+    // Create new contact
+    await page.click('[data-testid="add-contact-button"]')
+    await page.fill('[data-testid="contact-name"]', 'Test Contact')
+    await page.fill('[data-testid="contact-phone"]', '+966501234567')
+    await page.click('[data-testid="save-contact-button"]')
+
+    // Verify success message
+    await expect(page.locator('[data-testid="success-toast"]')).toContainText('Contact created')
+
+    // Verify in list
+    await expect(page.locator('text=Test Contact')).toBeVisible()
+    await expect(page.locator('text=+966501234567')).toBeVisible()
+  })
+
+  test('assign contact to team member', async ({ page }) => {
+    // ... similar flow
+  })
+})
+
+// tests/e2e/whatsapp-messaging.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('WhatsApp Messaging', () => {
+  test('send message and receive reply', async ({ page }) => {
+    // Login and navigate to chat
+    await page.goto('/login')
+    // ... login steps
+
+    await page.click('[data-testid="chat-menu"]')
+    await expect(page).toHaveURL('/chat')
+
+    // Select contact
+    await page.click('text=Ahmed Mohammed')
+
+    // Send message
+    await page.fill('[data-testid="message-input"]', 'Hello from E2E test')
+    await page.click('[data-testid="send-button"]')
+
+    // Verify message appears
+    await expect(page.locator('text=Hello from E2E test')).toBeVisible()
+
+    // Simulate incoming message (via webhook simulation)
+    // ... verify reply appears
+  })
+})
+
+// tests/e2e/flow-builder.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('Flow Builder', () => {
+  test('create and activate flow', async ({ page }) => {
+    await page.goto('/login')
+    // ... login
+
+    await page.click('[data-testid="flows-menu"]')
+    await page.click('[data-testid="create-flow-button"]')
+
+    // Add trigger node
+    await page.click('[data-testid="trigger-node"]')
+    await page.fill('[data-testid="node-keywords"]', 'hello, hi')
+
+    // Add message node
+    await page.click('[data-testid="message-node"]')
+    await page.fill('[data-testid="node-message"]', 'Welcome! How can I help?')
+
+    // Connect nodes
+    await page.dragAndDrop(
+      '[data-testid="trigger-output"]',
+      '[data-testid="message-input"]'
+    )
+
+    // Save and activate
+    await page.click('[data-testid="save-flow-button"]')
+    await expect(page.locator('[data-testid="success-toast"]')).toContainText('Flow saved')
+
+    await page.click('[data-testid="activate-flow-button"]')
+    await expect(page.locator('[data-testid="status-badge"]')).toContainText('Active')
+  })
+})
+
+// tests/e2e/rtl-ltr.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('RTL/LTR Support', () => {
+  test('dashboard renders correctly in RTL', async ({ page }) => {
+    await page.goto('/login')
+    await page.fill('[data-testid="email-input"]', 'admin@example.com')
+    await page.fill('[data-testid="password-input"]', 'SecurePass123!')
+    await page.click('[data-testid="login-button"]')
+
+    // Switch to Arabic
+    await page.click('[data-testid="language-selector"]')
+    await page.click('text=العربية')
+
+    // Verify RTL
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+    await expect(page.locator('[data-testid="sidebar"]')).toHaveClass(/rtl/)
+
+    // Verify layout is correct
+    const sidebar = await page.locator('[data-testid="sidebar"]').boundingBox()
+    const mainContent = await page.locator('[data-testid="main-content"]').boundingBox()
+    expect(sidebar?.x).toBeGreaterThan(mainContent?.x ?? 0)
+  })
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+5. اختبارات الأداء (Performance Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌5.1 معايير الأداء
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+الهدف: التأكد من أن النظام يحقق المقاييس المحددة
+
+المقياس              الحد المسموح              الأداة
+─────────────────────────────────────────────────────────────
+API Response P95     < 200ms                  k6
+Database Query       < 50ms                   k6 + PostgreSQL
+Page Load (FCP)      < 1.0s                   Lighthouse
+Page Load (LCP)      < 2.5s                   Lighthouse
+CLS                  < 0.1                    Lighthouse
+TTFB                 < 100ms                  k6
+
+▌5.2 Load Tests (اختبارات الحمل)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/performance/load-test.js (k6)
+import http from 'k6/http'
+import { check, sleep } from 'k6'
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 100 },   // Ramp up
+    { duration: '5m', target: 100 },   // Steady state
+    { duration: '2m', target: 200 },   // Ramp up
+    { duration: '5m', target: 200 },   // Steady state
+    { duration: '2m', target: 0 },     // Ramp down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<200'],
+    http_req_failed: ['rate<0.01'],
+  },
+}
+
+export default function () {
+  const response = http.get('https://api.whatsapp-crm.com/api/v1/contacts', {
+    headers: {
+      Authorization: `Bearer ${__ENV.AUTH_TOKEN}`,
+    },
+  })
+
+  check(response, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 200ms': (r) => r.timings.duration < 200,
+    'has contacts array': (r) => {
+      const body = JSON.parse(r.body)
+      return Array.isArray(body.data.contacts)
+    },
+  })
+
+  sleep(1)
+}
+
+▌5.3 Stress Tests (اختبارات الضغط)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/performance/stress-test.js (k6)
+export const options = {
+  stages: [
+    { duration: '2m', target: 1000 },  // Ramp to 1000
+    { duration: '5m', target: 1000 },  // Hold
+    { duration: '2m', target: 2000 },  // Ramp to 2000
+    { duration: '5m', target: 2000 },  // Hold
+    { duration: '5m', target: 5000 },  // Spike to 5000
+    { duration: '5m', target: 5000 },  // Hold at spike
+    { duration: '5m', target: 0 },     // Recovery
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<500'],
+    http_req_failed: ['rate<0.05'],
+  },
+}
+
+▌5.4 Spike Tests (اختبارات القفزة)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/performance/spike-test.js (k6)
+export const options = {
+  stages: [
+    { duration: '1m', target: 100 },     // Normal load
+    { duration: '30s', target: 5000 },  // Sudden spike
+    { duration: '2m', target: 5000 },   // Hold spike
+    { duration: '1m', target: 100 },    // Recovery
+  ],
+}
+
+▌5.5 Endurance Tests (اختبارات التحمل)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/performance/endurance-test.js (k6)
+export const options = {
+  stages: [
+    { duration: '10m', target: 500 },   // Ramp up
+    { duration: '24h', target: 500 }, // Hold for 24 hours
+    { duration: '10m', target: 0 },     // Ramp down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<300'],
+    http_req_failed: ['rate<0.001'],
+  },
+}
+
+▌5.6 Lighthouse CI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// lighthouserc.js
+module.exports = {
+  ci: {
+    collect: {
+      url: [
+        'http://localhost:3000/',
+        'http://localhost:3000/login',
+        'http://localhost:3000/dashboard',
+        'http://localhost:3000/contacts',
+        'http://localhost:3000/chat',
+      ],
+      numberOfRuns: 3,
+    },
+    assert: {
+      assertions: {
+        'categories:performance': ['warn', { minScore: 0.9 }],
+        'categories:accessibility': ['error', { minScore: 0.95 }],
+        'categories:best-practices': ['warn', { minScore: 0.9 }],
+        'categories:seo': ['warn', { minScore: 0.9 }],
+        'first-contentful-paint': ['warn', { maxNumericValue: 1000 }],
+        'largest-contentful-paint': ['warn', { maxNumericValue: 2500 }],
+        'cumulative-layout-shift': ['warn', { maxNumericValue: 0.1 }],
+      },
+    },
+  },
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+6. اختبارات الأمان (Security Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌6.1 OWASP Top 10 Testing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A01: Broken Access Control
+  → اختبار: محاولة الوصول لموارد المستخدمين الآخرين
+  → اختبار: تعديل معرف المستخدم في الطلب
+  → اختبار: الوصول لـ Admin APIs بدون صلاحيات
+
+A02: Cryptographic Failures
+  → اختبار: فحص TLS Configuration
+  → اختبار: التحقق من تشفير البيانات الحساسة
+  → اختبار: عدم تسريب Secrets في Logs
+
+A03: Injection (SQL, NoSQL, Command)
+  → اختبار: SQL Injection في جميع المدخلات
+  → اختبار: NoSQL Injection
+  → اختبار: Command Injection
+
+A04: Insecure Design
+  → اختبار: Business Logic Flaws
+  → اختبار: Race Conditions
+  → اختبار: IDOR (Insecure Direct Object References)
+
+A05: Security Misconfiguration
+  → اختبار: Headers Security (CSP, HSTS, X-Frame-Options)
+  → اختبار: Error Messages لا تسرب معلومات
+  → اختبار: Default Credentials
+
+A06: Vulnerable Components
+  → اختبار: npm audit (0 vulnerabilities critical)
+  → اختبار: Snyk scan
+  → اختبار: Dependabot alerts
+
+A07: Authentication Failures
+  → اختبار: Brute Force Protection
+  → اختبار: Session Management
+  → اختبار: Password Policy
+
+A08: Data Integrity Failures
+  → اختبار: CSRF Protection
+  → اختبار: Deserialization Security
+
+A09: Logging Failures
+  → اختبار: Audit Logs Completeness
+  → اختبار: Logs don't contain sensitive data
+
+A10: SSRF
+  → اختبار: Server-Side Request Forgery
+  → اختبار: URL Validation
+
+▌6.2 أدوات الأمان
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• OWASP ZAP: Automated Security Scanning
+• Burp Suite: Manual Penetration Testing
+• Snyk: Dependency Vulnerability Scanning
+• npm audit: Built-in vulnerability check
+• SonarQube: Code Quality & Security
+• GitGuardian: Secret Detection
+
+▌6.3 Security Test Cases
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/security/sql-injection.test.ts
+import { describe, it, expect } from 'vitest'
+
+describe('SQL Injection Prevention', () => {
+  it('should not allow SQL injection in search', async () => {
+    const maliciousInput = "'; DROP TABLE contacts; --"
+    const response = await fetch(`/api/contacts?search=${encodeURIComponent(maliciousInput)}`)
+    expect(response.status).toBe(200) // Should sanitize, not crash
+    const result = await response.json()
+    expect(result.data.contacts).toEqual([]) // No results, but no crash
+  })
+
+  it('should not allow SQL injection in contact name', async () => {
+    const data = {
+      name: "'; DROP TABLE users; --",
+      phone: '+966501234567',
+    }
+    const response = await fetch('/api/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    expect(response.status).toBe(201) // Should sanitize
+  })
+})
+
+// tests/security/xss-prevention.test.ts
+import { describe, it, expect } from 'vitest'
+
+describe('XSS Prevention', () => {
+  it('should sanitize script tags in contact name', async () => {
+    const xssPayload = '<script>alert("xss")</script>'
+    const data = { name: xssPayload, phone: '+966501234567' }
+    
+    const response = await fetch('/api/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    
+    const result = await response.json()
+    expect(result.data.contact.name).not.toContain('<script>')
+  })
+})
+
+// tests/security/rate-limiting.test.ts
+import { describe, it, expect } from 'vitest'
+
+describe('Rate Limiting', () => {
+  it('should block requests after limit exceeded', async () => {
+    // Send 101 requests rapidly
+    const requests = Array.from({ length: 101 }, () =>
+      fetch('/api/contacts', { method: 'GET' })
+    )
+    
+    const responses = await Promise.all(requests)
+    const lastResponse = responses[responses.length - 1]
+    
+    expect(lastResponse.status).toBe(429)
+    expect(lastResponse.headers.get('X-RateLimit-Remaining')).toBe('0')
+  })
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+7. اختبارات الوصول (Accessibility Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌7.1 معايير الوصول
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+المعيار: WCAG 2.1 Level AA
+
+✅ إلزامي: All interactive elements have focus indicators
+✅ إلزامي: Color contrast ratio ≥ 4.5:1 for normal text
+✅ إلزامي: Color contrast ratio ≥ 3:1 for large text
+✅ إلزامي: All images have alt text
+✅ إلزامي: Form fields have associated labels
+✅ إلزامي: Keyboard navigation works for all features
+✅ إلزامي: Screen reader announcements for dynamic content
+✅ إلزامي: RTL support for Arabic users
+
+▌7.2 أدوات الوصول
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• axe-core: Automated Accessibility Testing
+• Lighthouse: Accessibility Score ≥ 95
+• WAVE: Web Accessibility Evaluation Tool
+• NVDA/JAWS: Screen Reader Testing
+• Keyboard-only Navigation Testing
+
+▌7.3 Accessibility Test Cases
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/accessibility/contact-page.test.ts
+import { test, expect } from '@playwright/test'
+import { injectAxe, checkA11y } from 'axe-playwright'
+
+test.describe('Contact Page Accessibility', () => {
+  test('should have no accessibility violations', async ({ page }) => {
+    await page.goto('/contacts')
+    await injectAxe(page)
+    await checkA11y(page, {
+      rules: {
+        'color-contrast': { enabled: true },
+        'label': { enabled: true },
+        'button-name': { enabled: true },
+      },
+    })
+  })
+
+  test('should be navigable by keyboard', async ({ page }) => {
+    await page.goto('/contacts')
+    
+    // Tab through all interactive elements
+    await page.keyboard.press('Tab') // Focus search
+    await page.keyboard.press('Tab') // Focus add button
+    await page.keyboard.press('Tab') // Focus first contact
+    
+    // Verify focus is visible
+    const focusedElement = await page.evaluate(() => document.activeElement?.tagName)
+    expect(focusedElement).toBe('BUTTON')
+  })
+
+  test('should have proper ARIA labels in RTL', async ({ page }) => {
+    await page.goto('/contacts')
+    await page.click('[data-testid="language-selector"]')
+    await page.click('text=العربية')
+    
+    // Verify ARIA labels are in Arabic
+    const searchLabel = await page.getAttribute('[data-testid="search-input"]', 'aria-label')
+    expect(searchLabel).toContain('بحث')
+  })
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+8. اختبارات التوافق (Compatibility Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌8.1 متطلبات التوافق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Browsers:
+  • Chrome (latest, latest-1)
+  • Firefox (latest, latest-1)
+  • Safari (latest, latest-1)
+  • Edge (latest)
+  • Mobile Safari (iOS 16+)
+  • Chrome Mobile (Android 12+)
+
+Devices:
+  • Desktop: 1920x1080, 1366x768
+  • Tablet: 768x1024, 834x1194
+  • Mobile: 375x667, 390x844, 414x896
+
+▌8.2 Cross-Browser Testing Matrix
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Feature              Chrome  Firefox  Safari  Edge  Mobile
+─────────────────────────────────────────────────────────────
+Login                ✅      ✅       ✅      ✅     ✅
+Dashboard            ✅      ✅       ✅      ✅     ✅
+Contact CRUD         ✅      ✅       ✅      ✅     ✅
+Chat Interface       ✅      ✅       ✅      ✅     ✅
+Flow Builder         ✅      ✅       ⚠️      ✅     ⚠️
+Campaign Creation    ✅      ✅       ✅      ✅     ✅
+RTL Support          ✅      ✅       ✅      ✅     ✅
+File Upload          ✅      ✅       ✅      ✅     ✅
+
+▌8.3 Responsive Testing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/e2e/responsive/contact-page.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('Responsive Design', () => {
+  const viewports = [
+    { name: 'mobile', width: 375, height: 667 },
+    { name: 'tablet', width: 768, height: 1024 },
+    { name: 'desktop', width: 1920, height: 1080 },
+  ]
+
+  for (const viewport of viewports) {
+    test(`contact page on ${viewport.name}`, async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await page.goto('/contacts')
+      
+      // Verify no horizontal scroll
+      const body = await page.locator('body').boundingBox()
+      expect(body?.width).toBeLessThanOrEqual(viewport.width)
+      
+      // Verify sidebar behavior
+      if (viewport.name === 'mobile') {
+        await expect(page.locator('[data-testid="sidebar"]')).toBeHidden()
+      } else {
+        await expect(page.locator('[data-testid="sidebar"]')).toBeVisible()
+      }
+    })
+  }
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+9. اختبارات التحميل (Load Tests)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌9.1 Load Testing Scenarios
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scenario 1: Normal Load (100 concurrent users)
+  → API Response < 200ms (P95)
+  → Error Rate < 0.1%
+  → Database CPU < 50%
+
+Scenario 2: Peak Load (500 concurrent users)
+  → API Response < 500ms (P95)
+  → Error Rate < 1%
+  → Database CPU < 80%
+
+Scenario 3: Stress Load (1000 concurrent users)
+  → API Response < 1000ms (P95)
+  → Error Rate < 5%
+  → System remains stable
+
+Scenario 4: Spike Load (5000 users in 30 seconds)
+  → Recovery time < 2 minutes
+  → No data loss
+  → Queue system handles backlog
+
+▌9.2 Database Load Testing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// tests/performance/db-load-test.sql
+-- Connection Pool Test
+SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
+-- Should not exceed max_connections (default: 100)
+
+-- Query Performance Test
+EXPLAIN ANALYZE
+SELECT c.*, array_agg(t.name) as tags
+FROM contacts c
+LEFT JOIN contact_tags ct ON c.id = ct.contact_id
+LEFT JOIN tags t ON ct.tag_id = t.id
+WHERE c.tenant_id = 'tenant-uuid'
+AND c.status = 'active'
+GROUP BY c.id
+ORDER BY c.created_at DESC
+LIMIT 20;
+-- Should complete in < 50ms
+
+-- Index Usage Test
+SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+AND indexname NOT LIKE '%_pkey'
+AND indexname NOT LIKE '%_unique';
+-- Should return 0 unused indexes
+
+═══════════════════════════════════════════════════════════════════════════════
+10. معايير التغطية (Coverage Standards)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌10.1 الحد الأدنى للتغطية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+النوع              الحد الأدنى    الهدف
+────────────────────────────────────────────
+Lines              85%            90%
+Functions          85%            90%
+Branches           80%            85%
+Statements         85%            90%
+
+▌10.2 الملفات المستثناة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• *.config.ts (Configuration files)
+• *.d.ts (Type definitions)
+• src/app/api/ (Tested via Integration Tests)
+• src/components/ui/ (Simple UI components)
+• tests/ (Test files themselves)
+• scripts/ (Build scripts)
+
+▌10.3 Coverage Reporting
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      thresholds: {
+        lines: 85,
+        functions: 85,
+        branches: 80,
+        statements: 85,
+      },
+      exclude: [
+        '**/*.config.*',
+        '**/*.d.ts',
+        '**/app/api/**',
+        '**/components/ui/**',
+        '**/tests/**',
+        '**/scripts/**',
+      ],
+    },
+  },
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+11. أدوات الاختبار (Testing Tools)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌11.1 Stack الاختبار
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit & Integration:     Vitest + React Testing Library
+E2E:                    Playwright
+Performance:            k6 + Lighthouse CI
+Security:               OWASP ZAP + Snyk + npm audit
+Accessibility:          axe-core + Lighthouse
+Mocking:                MSW (Mock Service Worker) + vi.fn()
+Coverage:               @vitest/coverage-v8
+Visual Regression:      Playwright + Pixelmatch
+
+▌11.2 إعداد Vitest
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['tests/e2e/**', 'tests/performance/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        lines: 85,
+        functions: 85,
+        branches: 80,
+        statements: 85,
+      },
+    },
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+
+▌11.3 إعداد Playwright
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [
+    ['html', { open: 'never' }],
+    ['json', { outputFile: 'test-results/e2e-results.json' }],
+  ],
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    },
+  ],
+  webServer: {
+    command: 'pnpm dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+12. CI/CD Integration
+═══════════════════════════════════════════════════════════════════════════════
+
+▌12.1 GitHub Actions Workflow
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# .github/workflows/test.yml
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm test:unit --coverage
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v4
+      - run: pnpm install
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - run: pnpm test:integration
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v4
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm test:e2e
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - run: pnpm install
+      - run: pnpm test:performance
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - run: pnpm audit --audit-level moderate
+      - uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm lhci:autorun
+
+▌12.2 Quality Gates
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PR cannot be merged if:
+  ❌ Unit tests fail
+  ❌ Integration tests fail
+  ❌ Coverage < 85%
+  ❌ Lint errors exist
+  ❌ TypeScript errors exist
+  ❌ Security vulnerabilities (moderate+)
+  ❌ Lighthouse score < 90
+
+═══════════════════════════════════════════════════════════════════════════════
+13. تقارير الاختبار (Test Reporting)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌13.1 تنسيق التقرير
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test Execution Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Date: 2026-05-06
+Branch: main
+Commit: abc123
+
+Unit Tests:
+  Total: 250
+  Passed: 248
+  Failed: 0
+  Skipped: 2
+  Duration: 12.5s
+  Coverage: Lines 87%, Functions 89%, Branches 82%
+
+Integration Tests:
+  Total: 45
+  Passed: 45
+  Failed: 0
+  Duration: 45.2s
+
+E2E Tests:
+  Total: 30
+  Passed: 30
+  Failed: 0
+  Duration: 180.5s
+  Browsers: Chrome ✅, Firefox ✅, Safari ✅
+
+Performance Tests:
+  Load Test: ✅ (P95: 180ms)
+  Stress Test: ✅ (P95: 450ms)
+  Lighthouse: Performance 92, Accessibility 97
+
+Security Tests:
+  OWASP ZAP: 0 High, 2 Medium, 5 Low
+  npm audit: 0 vulnerabilities
+  Snyk: 0 vulnerabilities
+
+▌13.2 إشعارات الفشل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Slack notification on test failure
+• Email to team lead on critical failure
+• PagerDuty alert on production test failure
+• GitHub PR comment with test results
+
+═══════════════════════════════════════════════════════════════════════════════
+14. إدارة العيوب (Defect Management)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌14.1 تصنيف العيوب
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 Critical: System crash, data loss, security breach
+   → Fix: Immediate (< 2 hours)
+   → Testing: Full regression required
+
+🟠 High: Major feature broken, significant performance issue
+   → Fix: < 24 hours
+   → Testing: Feature + related areas
+
+🟡 Medium: Minor feature issue, UI glitch
+   → Fix: < 1 week
+   → Testing: Feature only
+
+🟢 Low: Cosmetic issue, enhancement request
+   → Fix: Next sprint
+   → Testing: Visual check
+
+▌14.2 سير العمل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Discover → 2. Log → 3. Triage → 4. Fix → 5. Verify → 6. Close
+
+═══════════════════════════════════════════════════════════════════════════════
+15. خطة الاختبار لكل مرحلة
+═══════════════════════════════════════════════════════════════════════════════
+
+▌15.1 المرحلة 1-2: الأساس (أسابيع 1-2)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ Unit tests for utilities and validators
+□ Integration tests for database connection
+□ E2E tests for authentication flow
+□ Performance baseline establishment
+
+▌15.2 المرحلة 3-4: الواجهة والمستخدمين (أسابيع 3-6)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ Unit tests for all UI components
+□ Integration tests for user CRUD
+□ E2E tests for user management
+□ Accessibility tests for all pages
+
+▌15.3 المرحلة 5-6: واتساب وCRM (أسابيع 7-10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ Unit tests for WhatsApp service
+□ Integration tests for message flow
+□ E2E tests for chat interface
+□ Security tests for webhooks
+
+▌15.4 المرحلة 7-8: الأتمتة والتقارير (أسابيع 11-14)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ Unit tests for Flow Builder logic
+□ Integration tests for AI service
+□ E2E tests for campaign creation
+□ Performance tests for bulk operations
+
+▌15.5 المرحلة 9-10: التحسين والإطلاق (أسابيع 15-16)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ Full regression test suite
+□ Load testing at production scale
+□ Security penetration testing
+□ Final accessibility audit
+□ Cross-browser compatibility check
+
+═══════════════════════════════════════════════════════════════════════════════
+                          نهاية معايير الاختبار
+              "البرمجة بدون اختبار هي كالقيادة بدون فرامل" - خبير الأنظمة
+═══════════════════════════════════════════════════════════════════════════════

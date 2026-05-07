@@ -1,0 +1,54 @@
+{
+  "Common": {
+    "dashboard": "لوحة التحكم",
+    "contacts": "جهات الاتصال",
+    "chat": "المحادثات",
+    "automation": "الأتمتة",
+    "reports": "التقارير",
+    "users": "المستخدمين",
+    "settings": "الإعدادات",
+    "system_admin": "المشرف الأكاديمي",
+    "search_placeholder": "البحث الجنائي في النظام...",
+    "manage_permissions": "إدارة الصلاحيات",
+    "account_settings": "إعدادات الحساب",
+    "logout": "تسجيل الخروج",
+    "system_status": "حالة النظام: مثالية",
+    "departments": "الأقسام",
+    "admin_center": "مركز الإدارة"
+  },
+  "Dashboard": {
+    "title": "لوحة القيادة المركزية",
+    "description": "نظرة عامة على أداء النظام والعمليات الجارية.",
+    "total_contacts": "إجمالي جهات الاتصال",
+    "daily_messages": "رسائل اليوم",
+    "response_rate": "معدل الاستجابة",
+    "campaign_growth": "نمو الحملات"
+  },
+  "Users": {
+    "title": "إدارة فريق العمل",
+    "description": "إضافة وتعديل والتحكم في صلاحيات المستخدمين داخل المؤسسة.",
+    "add_user": "دعوة مستخدم جديد",
+    "table_user": "المستخدم",
+    "table_role": "الدور الوظيفي",
+    "table_permissions": "الصلاحيات",
+    "table_actions": "الإجراءات",
+    "database_info": "قاعدة البيانات: MongoDB Cloud Cluster",
+    "your_role": "دورك الحالي"
+  },
+  "Departments": {
+    "title": "إدارة الأقسام والفرق",
+    "description": "نظم مؤسستك عبر توزيع الموظفين على أقسام تخصصية وفرق عمل مرنة.",
+    "add_department": "إضافة قسم جديد",
+    "add_team": "إضافة فريق",
+    "members": "أعضاء",
+    "teams": "الفرق التابعة",
+    "view_details": "عرض التفاصيل الإدارية"
+  },
+  "Admin": {
+    "title": "مركز الإدارة الموحد",
+    "description": "تحكم شامل في المستخدمين، الأقسام، والصلاحيات من واجهة واحدة مؤمنة.",
+    "users_tab": "المستخدمين",
+    "depts_tab": "الأقسام والفرق",
+    "roles_tab": "الصلاحيات (RBAC)"
+  }
+}

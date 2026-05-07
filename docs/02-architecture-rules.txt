@@ -1,0 +1,1109 @@
+═══════════════════════════════════════════════════════════════════════════════
+               WHATSAPP CRM SYSTEM - قواعد الهندسة المعمارية
+                    Architecture Rules & Engineering Standards
+═══════════════════════════════════════════════════════════════════════════════
+
+📌 الإصدار: 1.0.0 | آخر تحديث: 2026-05-06
+📌 المؤلف: Lead System Architect (30 Years Experience)
+📌 الحالة: إلزامي - لا يجوز تجاوز أي قاعدة دون موافقة معمارية
+
+═══════════════════════════════════════════════════════════════════════════════
+جدول المحتويات
+═══════════════════════════════════════════════════════════════════════════════
+1. مبادئ التصميم المعماري (Architectural Principles)
+2. هندسة المجلدات والملفات (Folder Architecture)
+3. قواعد SOLID المطبقة (Applied SOLID Rules)
+4. قواعد Clean Architecture (Clean Architecture Rules)
+5. قواعد Dependency Injection (DI Rules)
+6. قواعد State Management (State Rules)
+7. قواعد API Design (API Design Rules)
+8. قواعد Database Access (DB Access Rules)
+9. قواعد Error Handling (Error Handling Rules)
+10. قواعد Logging & Monitoring (Observability Rules)
+11. قواعد Performance (Performance Rules)
+12. قواعد Security (Security Rules)
+13. قواعد Testing (Testing Rules)
+14. قواعد Code Review (Review Rules)
+15. مخالفات وعقوبات (Violations & Penalties)
+
+═══════════════════════════════════════════════════════════════════════════════
+1. مبادئ التصميم المعماري
+═══════════════════════════════════════════════════════════════════════════════
+
+▌1.1 مبدأ Separation of Concerns (SoC)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: كتابة منطق الأعمال (Business Logic) داخل المكونات
+✅ إلزامي: فصل المنطق إلى Services → Repositories → Models
+
+مثال صحيح:
+  Component → calls → Service → calls → Repository → Database
+  
+مثال خاطئ:
+  Component → fetch() مباشرة إلى Database
+
+▌1.2 مبدأ DRY (Don't Repeat Yourself)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: تكرار أكثر من 3 أسطر كود في موقعين مختلفين
+✅ إلزامي: استخراج الكود المكرر إلى Utility / Hook / Component
+
+▌1.3 مبدأ KISS (Keep It Simple, Stupid)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: حل معقد لمسألة بسيطة
+✅ إلزامي: أبسط حل يحقق المتطلبات
+
+قاعدة: إذا احتاج الكود لتعليق (comment) لتوضيح ما يفعله، فهو معقد
+
+▌1.4 مبدأ YAGNI (You Ain't Gonna Need It)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: بناء ميزات "قد نحتاجها مستقبلاً"
+✅ إلزامي: بناء فقط ما هو مطلوب في Sprint الحالي
+
+▌1.5 مبدأ Composition over Inheritance
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: استخدام Class Inheritance في React
+✅ إلزامي: استخدام Composition (HOC, Render Props, Custom Hooks)
+
+═══════════════════════════════════════════════════════════════════════════════
+2. هندسة المجلدات والملفات
+═══════════════════════════════════════════════════════════════════════════════
+
+▌2.1 هيكل المجلدات المطلوب
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+src/
+├── app/                          [Next.js App Router - طبقة العرض فقط]
+│   ├── (auth)/                   [مجموعة المصادقة]
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── forgot-password/
+│   │   └── layout.tsx            [Layout خاص بالمصادقة]
+│   ├── (dashboard)/              [مجموعة لوحة التحكم]
+│   │   ├── layout.tsx            [Layout رئيسي مع Sidebar]
+│   │   ├── page.tsx              [الصفحة الرئيسية]
+│   │   ├── contacts/
+│   │   ├── campaigns/
+│   │   ├── flow-builder/
+│   │   ├── settings/
+│   │   └── teams/
+│   ├── (public)/                 [الصفحات العامة]
+│   │   ├── page.tsx              [الصفحة الرئيسية]
+│   │   ├── pricing/
+│   │   └── about/
+│   └── api/                      [نقاط النهاية API]
+│       ├── auth/
+│       ├── contacts/
+│       ├── messages/
+│       ├── campaigns/
+│       ├── flows/
+│       ├── webhooks/
+│       └── ai/
+│
+├── components/                   [مكونات React - طبقة العرض]
+│   ├── ui/                       [مكونات UI أساسية - Design System]
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── select.tsx
+│   │   ├── modal.tsx
+│   │   ├── table.tsx
+│   │   ├── card.tsx
+│   │   ├── badge.tsx
+│   │   ├── avatar.tsx
+│   │   ├── toast.tsx
+│   │   ├── dropdown.tsx
+│   │   ├── tabs.tsx
+│   │   ├── accordion.tsx
+│   │   ├── skeleton.tsx
+│   │   └── index.ts              [تصدير جميع المكونات]
+│   │
+│   ├── forms/                    [نماذج الإدخال المعقدة]
+│   │   ├── contact-form.tsx
+│   │   ├── campaign-form.tsx
+│   │   ├── flow-node-form.tsx
+│   │   └── team-form.tsx
+│   │
+│   ├── layouts/                  [تخطيطات الصفحات]
+│   │   ├── dashboard-layout.tsx
+│   │   ├── auth-layout.tsx
+│   │   └── public-layout.tsx
+│   │
+│   ├── modals/                   [النوافذ المنبثقة]
+│   │   ├── confirm-modal.tsx
+│   │   ├── contact-modal.tsx
+│   │   └── campaign-modal.tsx
+│   │
+│   └── features/                 [مكونات الميزات الكبيرة]
+│       ├── flow-builder/         [محرك الأتمتة المرئي]
+│       │   ├── canvas.tsx
+│       │   ├── node-types/
+│       │   ├── edge-types/
+│       │   ├── toolbar.tsx
+│       │   ├── properties-panel.tsx
+│       │   └── index.ts
+│       ├── chat/                 [واجهة المحادثة]
+│       │   ├── chat-list.tsx
+│       │   ├── chat-window.tsx
+│       │   ├── message-bubble.tsx
+│       │   ├── message-input.tsx
+│       │   └── index.ts
+│       ├── crm/                  [مكونات CRM]
+│       │   ├── contact-card.tsx
+│       │   ├── funnel-board.tsx
+│       │   ├── tag-manager.tsx
+│       │   └── index.ts
+│       └── campaigns/            [مكونات الحملات]
+│           ├── campaign-list.tsx
+│           ├── campaign-stats.tsx
+│           ├── recipient-table.tsx
+│           └── index.ts
+│
+├── lib/                          [المنطق والبنية التحتية]
+│   ├── auth/                     [منطق المصادقة]
+│   │   ├── session.ts            [إدارة الجلسات Iron-Session]
+│   │   ├── jwt.ts                [إنشاء/التحقق من JWT]
+│   │   ├── password.ts           [bcrypt hashing]
+│   │   ├── rbac.ts               [Role-Based Access Control]
+│   │   └── index.ts
+│   │
+│   ├── db/                       [إعداد قاعدة البيانات]
+│   │   ├── index.ts              [اتصال Drizzle]
+│   │   ├── schema/               [تعريفات الجداول]
+│   │   │   ├── users.ts
+│   │   │   ├── contacts.ts
+│   │   │   ├── messages.ts
+│   │   │   ├── campaigns.ts
+│   │   │   ├── flows.ts
+│   │   │   ├── teams.ts
+│   │   │   └── index.ts
+│   │   ├── migrations/           [ملفات الهجرة]
+│   │   └── seed.ts               [بيانات أولية]
+│   │
+│   ├── ai/                       [تكامل الذكاء الاصطناعي]
+│   │   ├── openai.ts             [OpenAI Client]
+│   │   ├── gemini.ts             [Google Gemini Client]
+│   │   ├── prompts.ts            [Prompt Templates]
+│   │   ├── embeddings.ts         [Vector Embeddings]
+│   │   └── index.ts
+│   │
+│   ├── whatsapp/                 [تكامل واتساب]
+│   │   ├── evolution-api.ts      [Evolution API Client]
+│   │   ├── meta-api.ts           [Meta Cloud API Client]
+│   │   ├── message-parser.ts     [معالجة الرسائل الواردة]
+│   │   ├── media-handler.ts      [معالجة الوسائط]
+│   │   ├── session-manager.ts    [إدارة الجلسات]
+│   │   └── index.ts
+│   │
+│   ├── pusher/                   [إعداد Pusher]
+│   │   ├── server.ts             [Pusher Server]
+│   │   ├── client.ts             [Pusher Client]
+│   │   ├── channels.ts           [تعريف القنوات]
+│   │   └── index.ts
+│   │
+│   └── validators/               [التحقق من الصحة]
+│       ├── auth.ts
+│       ├── contact.ts
+│       ├── campaign.ts
+│       ├── flow.ts
+│       └── index.ts
+│
+├── hooks/                        [React Hooks مخصصة]
+│   ├── use-auth.ts
+│   ├── use-contacts.ts
+│   ├── use-campaigns.ts
+│   ├── use-flows.ts
+│   ├── use-whatsapp.ts
+│   ├── use-pusher.ts
+│   ├── use-debounce.ts
+│   ├── use-local-storage.ts
+│   ├── use-media-query.ts
+│   └── index.ts
+│
+├── types/                        [تعريفات TypeScript]
+│   ├── auth.ts
+│   ├── contact.ts
+│   ├── message.ts
+│   ├── campaign.ts
+│   ├── flow.ts
+│   ├── team.ts
+│   ├── api.ts
+│   └── index.ts
+│
+├── utils/                        [دوال مساعدة خالصة]
+│   ├── cn.ts                     [clsx + tailwind-merge]
+│   ├── date.ts                   [معالجة التواريخ]
+│   ├── string.ts                 [معالجة النصوص]
+│   ├── number.ts                 [معالجة الأرقام]
+│   ├── file.ts                   [معالجة الملفات]
+│   ├── validation.ts             [دوال تحقق عامة]
+│   ├── constants.ts              [ثوابت النظام]
+│   └── index.ts
+│
+├── middleware/                   [وسائط Next.js]
+│   ├── auth.ts                   [حماية المسارات]
+│   ├── rbac.ts                   [التحقق من الصلاحيات]
+│   ├── rate-limit.ts             [الحد من الطلبات]
+│   ├── i18n.ts                   [تعدد اللغات]
+│   └── index.ts
+│
+└── services/                     [طبقة الخدمات - Business Logic]
+    ├── auth-service.ts
+    ├── contact-service.ts
+    ├── message-service.ts
+    ├── campaign-service.ts
+    ├── flow-service.ts
+    ├── team-service.ts
+    ├── ai-service.ts
+    ├── whatsapp-service.ts
+    ├── analytics-service.ts
+    └── index.ts
+
+▌2.2 قواعد تسمية الملفات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+النوع              القاعدة                     مثال
+─────────────────────────────────────────────────────────────────────────────
+المجلدات           kebab-case                 flow-builder/
+ملفات TS/TSX       kebab-case                 use-auth.ts
+المكونات           PascalCase                 FlowBuilder.tsx
+الأنواع            PascalCase + Type          UserType.ts
+الواجهات           PascalCase + I             IUserService.ts
+الثوابت            UPPER_SNAKE_CASE           MAX_RETRY_COUNT
+الدوال             camelCase                  handleSubmit
+الHooks            camelCase + use-             useAuth
+الServices          PascalCase + Service       AuthService
+
+▌2.3 قواعد تصدير الملفات (Exports)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: export default للمكونات (يسبب مشاكل في Tree Shaking)
+✅ إلزامي: Named Exports فقط
+
+// ✅ صحيح
+export function Button() { ... }
+export const Button = () => { ... }
+
+// ❌ خاطئ
+export default function Button() { ... }
+
+❌ ممنوع: Barrel files (index.ts) مع re-export للجميع
+✅ إلزامي: تصدير فقط ما هو مطلوب
+
+// ✅ صحيح - index.ts
+export { Button } from './button'
+export { Input } from './input'
+
+// ❌ خاطئ
+export * from './button'
+export * from './input'
+
+═══════════════════════════════════════════════════════════════════════════════
+3. قواعد SOLID المطبقة
+═══════════════════════════════════════════════════════════════════════════════
+
+▌3.1 Single Responsibility Principle (SRP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+قاعدة: كل ملف/دالة/مكون مسؤولية واحدة فقط
+
+❌ ممنوع: دالة تقوم بـ 3 مهام مختلفة
+✅ إلزامي: تقسيم إلى 3 دوال منفصلة
+
+// ❌ خاطئ
+async function createContactAndSendMessage(data) {
+  // 1. التحقق من البيانات
+  // 2. حفظ في قاعدة البيانات
+  // 3. إرسال رسالة ترحيب
+}
+
+// ✅ صحيح
+async function validateContactData(data) { ... }
+async function saveContact(data) { ... }
+async function sendWelcomeMessage(contactId) { ... }
+
+▌3.2 Open/Closed Principle (OCP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+قاعدة: مفتوح للتوسع، مغلق للتعديل
+
+❌ ممنوع: تعديل كود موجود لإضافة ميزة جديدة
+✅ إلزامي: إضافة كود جديد عبر Extension Points
+
+// ✅ صحيح - استخدام Strategy Pattern
+interface MessageProvider {
+  send(to: string, content: string): Promise<void>
+}
+
+class EvolutionProvider implements MessageProvider { ... }
+class MetaProvider implements MessageProvider { ... }
+class MockProvider implements MessageProvider { ... } // للاختبار
+
+▌3.3 Liskov Substitution Principle (LSP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+قاعدة: الفئة الفرعية يجب أن تكون قابلة للاستبدال بالفئة الأم
+
+❌ ممنوع: Override لدالة ترمي Error غير متوقعة
+✅ إلزامي: الحفاظ على العقد (Contract) للفئة الأم
+
+▌3.4 Interface Segregation Principle (ISP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+قاعدة: تقسيم الواجهات الكبيرة إلى واجهات صغيرة متخصصة
+
+// ❌ خاطئ - واجهة ضخمة
+interface IUserService {
+  createUser()
+  updateUser()
+  deleteUser()
+  sendEmail()
+  generateReport()
+  exportData()
+}
+
+// ✅ صحيح - واجهات منفصلة
+interface IUserCRUDService { createUser(); updateUser(); deleteUser(); }
+interface IEmailService { sendEmail(); }
+interface IReportService { generateReport(); exportData(); }
+
+▌3.5 Dependency Inversion Principle (DIP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+قاعدة: الاعتماد على التجريدات، لا على التفاصيل
+
+❌ ممنوع: استيراد Implementation مباشرة
+✅ إلزامي: استيراد Interface/Abstraction
+
+// ❌ خاطئ
+import { PostgreSQLContactRepository } from './db/postgresql'
+const repo = new PostgreSQLContactRepository()
+
+// ✅ صحيح
+import { IContactRepository } from './interfaces'
+const repo: IContactRepository = container.resolve('contactRepository')
+
+═══════════════════════════════════════════════════════════════════════════════
+4. قواعد Clean Architecture
+═══════════════════════════════════════════════════════════════════════════════
+
+▌4.1 قواعد الاعتمادات (Dependency Rules)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+القاعدة الذهبية: الاعتمادات تتجه للداخل فقط
+
+        ┌─────────────────────────┐
+        │   Presentation Layer    │  ← Components, Pages
+        │   (app/, components/)   │
+        ├─────────────────────────┤
+        │   Application Layer     │  ← Hooks, Services
+        │   (hooks/, services/)   │
+        ├─────────────────────────┤
+        │   Domain Layer          │  ← Types, Interfaces, Business Rules
+        │   (types/, interfaces/) │
+        ├─────────────────────────┤
+        │   Infrastructure Layer  │  ← DB, API, External Services
+        │   (lib/, utils/)         │
+        └─────────────────────────┘
+
+❌ ممنوع: lib/db/ يستورد من app/ أو components/
+✅ إلزامي: app/ يستورد من lib/ و services/
+
+▌4.2 قواعد الـ Use Cases
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: كتابة Use Case داخل Controller/API Route
+✅ إلزامي: Use Case منفصل في طبقة Services
+
+// ✅ صحيح - app/api/contacts/route.ts
+import { ContactService } from '@/services/contact-service'
+
+export async function POST(request: Request) {
+  const data = await request.json()
+  const result = await ContactService.create(data)  // Use Case
+  return Response.json(result)
+}
+
+// ❌ خاطئ - منطق الأعمال داخل API Route
+export async function POST(request: Request) {
+  const data = await request.json()
+  // ❌ منطق validation + DB + business rules هنا
+  const contact = await db.insert(contacts).values(data)
+  await sendWelcomeMessage(contact.id)
+  await logActivity('contact_created')
+  return Response.json(contact)
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+5. قواعد Dependency Injection (DI)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌5.1 استخدام Service Container
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: new ClassName() مباشرة في الكود
+✅ إلزامي: استخدام Container أو Factory Pattern
+
+// ✅ صحيح - lib/di/container.ts
+class ServiceContainer {
+  private services = new Map()
+  
+  register<T>(key: string, factory: () => T): void {
+    this.services.set(key, { factory, instance: null })
+  }
+  
+  resolve<T>(key: string): T {
+    const service = this.services.get(key)
+    if (!service.instance) {
+      service.instance = service.factory()
+    }
+    return service.instance
+  }
+}
+
+export const container = new ServiceContainer()
+
+// تسجيل الخدمات
+container.register('contactRepository', () => new DrizzleContactRepository())
+container.register('contactService', () => new ContactService(
+  container.resolve('contactRepository')
+))
+
+▌5.2 قواعد Constructor Injection
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: Service يقوم بإنشاء Dependencies داخله
+✅ إلزامي: تمرير Dependencies عبر Constructor
+
+// ✅ صحيح
+class ContactService {
+  constructor(
+    private readonly repository: IContactRepository,
+    private readonly whatsappService: IWhatsAppService,
+    private readonly auditLogger: IAuditLogger
+  ) {}
+}
+
+// ❌ خاطئ
+class ContactService {
+  private repository = new DrizzleContactRepository()  // ❌ Hardcoded
+  private whatsappService = new WhatsAppService()        // ❌ Hardcoded
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+6. قواعد State Management
+═══════════════════════════════════════════════════════════════════════════════
+
+▌6.1 هرمية إدارة الحالة (State Hierarchy)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+المستوى 1: Local State (useState)        → داخل المكون فقط
+المستوى 2: Shared State (useContext)     → بين مكونات شجرة واحدة
+المستوى 3: Server State (TanStack Query) → البيانات من الخادم
+المستوى 4: Global State (Zustand)        → حالة عالمية نادرة الاستخدام
+
+❌ ممنوع: استخدام Redux/Zustand للبيانات القادمة من الخادم
+✅ إلزامي: TanStack Query لجميع بيانات الخادم
+
+▌6.2 قواعد TanStack Query (v5)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: fetch/axios مباشرة في المكونات
+✅ إلزامي: useQuery / useMutation للبيانات
+
+// ✅ صحيح
+const { data: contacts, isLoading } = useQuery({
+  queryKey: ['contacts', { page, search }],
+  queryFn: () => contactService.getAll({ page, search }),
+  staleTime: 5 * 60 * 1000,  // 5 دقائق
+  gcTime: 10 * 60 * 1000,   // 10 دقائق
+})
+
+// ❌ خاطئ
+const [contacts, setContacts] = useState([])
+useEffect(() => {
+  fetch('/api/contacts').then(r => r.json()).then(setContacts)
+}, [])
+
+▌6.3 قواعد التخزين المؤقت (Caching)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: تخزين بيانات حساسة في localStorage
+✅ إلزامي: استخدام sessionStorage للبيانات المؤقتة
+
+البيانات المسموح بتخزينها في localStorage:
+  - theme (light/dark)
+  - language preference
+  - sidebar state (collapsed/expanded)
+
+البيانات الممنوعة من localStorage:
+  - JWT tokens (استخدم httpOnly cookies)
+  - User data
+  - Contacts data
+  - Messages
+
+═══════════════════════════════════════════════════════════════════════════════
+7. قواعد API Design
+═══════════════════════════════════════════════════════════════════════════════
+
+▌7.1 RESTful API Standards
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+القاعدة: اتباع RESTful conventions
+
+GET    /api/contacts          → قائمة جهات الاتصال (paginated)
+GET    /api/contacts/:id      → جهة اتصال واحدة
+POST   /api/contacts          → إنشاء جهة اتصال
+PUT    /api/contacts/:id      → تحديث كامل
+PATCH  /api/contacts/:id      → تحديث جزئي
+DELETE /api/contacts/:id      → حذف
+
+▌7.2 قواعد الـ Response
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ إلزامي: تنسيق موحد لجميع الـ Responses
+
+// ✅ صحيح - Response ناجح
+{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8
+  }
+}
+
+// ✅ صحيح - Response خطأ
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      { "field": "email", "message": "Invalid email format" }
+    ]
+  }
+}
+
+▌7.3 قواعد الـ Request Validation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: التحقق من الصحة يدوياً في API Route
+✅ إلزامي: استخدام Zod Schema Validation
+
+// ✅ صحيح
+import { z } from 'zod'
+
+const CreateContactSchema = z.object({
+  name: z.string().min(2).max(100),
+  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/),
+  email: z.string().email().optional(),
+  tags: z.array(z.string().uuid()).optional(),
+})
+
+export async function POST(request: Request) {
+  const body = await request.json()
+  const data = CreateContactSchema.parse(body)  // Zod validation
+  // ...
+}
+
+▌7.4 قواعد Error Handling في API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: إرجاع stack trace أو معلومات حساسة في الخطأ
+✅ إلزامي: معالجة الأخطاء عبر Global Error Handler
+
+// ✅ صحيح - lib/api/error-handler.ts
+export class AppError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public statusCode: number = 500,
+    public details?: Record<string, unknown>
+  ) {
+    super(message)
+  }
+}
+
+export function handleApiError(error: unknown): Response {
+  if (error instanceof AppError) {
+    return Response.json(
+      { success: false, error: { code: error.code, message: error.message, details: error.details } },
+      { status: error.statusCode }
+    )
+  }
+  
+  // Log to monitoring service (Sentry)
+  logger.error('Unhandled error', error)
+  
+  return Response.json(
+    { success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+    { status: 500 }
+  )
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+8. قواعد Database Access
+═══════════════════════════════════════════════════════════════════════════════
+
+▌8.1 قواعد Drizzle ORM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: كتابة SQL خام (Raw SQL) إلا في حالات استثنائية
+✅ إلزامي: استخدام Drizzle Query Builder
+
+// ✅ صحيح
+const contacts = await db
+  .select()
+  .from(contactsTable)
+  .where(eq(contactsTable.userId, userId))
+  .limit(20)
+  .offset((page - 1) * 20)
+
+// ❌ خاطئ
+const contacts = await db.execute(
+  sql`SELECT * FROM contacts WHERE user_id = ${userId} LIMIT 20 OFFSET ${offset}`
+)
+
+▌8.2 قواعد Transactions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: عمليات متعددة بدون Transaction
+✅ إلزامي: استخدام Transactions للعمليات المتعلقة
+
+// ✅ صحيح
+await db.transaction(async (tx) => {
+  const [contact] = await tx.insert(contacts).values(data).returning()
+  await tx.insert(contactTags).values(tags.map(tag => ({ contactId: contact.id, tagId: tag })))
+  await tx.insert(activityLogs).values({ action: 'contact_created', entityId: contact.id })
+})
+
+▌8.3 قواعد N+1 Query
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: N+1 Query Problem
+✅ إلزامي: استخدام Joins أو Data Loaders
+
+// ❌ خاطئ - N+1 Query
+const contacts = await db.select().from(contactsTable)
+for (const contact of contacts) {
+  const tags = await db.select().from(tagsTable).where(eq(tagsTable.contactId, contact.id))
+  // N queries إضافية!
+}
+
+// ✅ صحيح - Single Query with Join
+const contactsWithTags = await db
+  .select({
+    contact: contactsTable,
+    tag: tagsTable,
+  })
+  .from(contactsTable)
+  .leftJoin(tagsTable, eq(contactsTable.id, tagsTable.contactId))
+
+▌8.4 قواعد Indexing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: إضافة Index بدون تحليل الـ Query Plan
+✅ إلزامي: مراجعة Query Plan قبل إضافة Index
+
+// ✅ صحيح - إضافة Index مع التعليل
+// Index: contacts_user_id_phone_idx
+// Reason: البحث المتكرر عن جهات الاتصال حسب user_id + phone
+// Usage: WHERE user_id = ? AND phone = ?
+// Expected improvement: ~90% faster lookups
+
+export const contactsTable = pgTable('contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => usersTable.id),
+  phone: varchar('phone', { length: 20 }).notNull(),
+  // ...
+}, (table) => [
+  index('contacts_user_id_phone_idx').on(table.userId, table.phone),
+  index('contacts_created_at_idx').on(table.createdAt),
+])
+
+═══════════════════════════════════════════════════════════════════════════════
+9. قواعد Error Handling
+═══════════════════════════════════════════════════════════════════════════════
+
+▌9.1 هرمية الأخطاء (Error Hierarchy)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AppError (Base)
+├── ValidationError     (400)
+├── AuthenticationError (401)
+├── AuthorizationError  (403)
+├── NotFoundError       (404)
+├── ConflictError       (409)
+├── RateLimitError      (429)
+└── InternalError       (500)
+
+▌9.2 قواعد Try/Catch
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: catch فارغ أو catch مع console.log فقط
+✅ إلزامي: معالجة الأخطاء بشكل مناسب
+
+// ❌ خاطئ
+try {
+  await sendMessage(data)
+} catch (e) {
+  console.log(e)  // ❌ لا يفعل شيئاً
+}
+
+// ✅ صحيح
+try {
+  await sendMessage(data)
+} catch (error) {
+  if (error instanceof WhatsAppAPIError) {
+    await retryWithExponentialBackoff(sendMessage, data)
+    await notifyAdmin('WhatsApp API failure', error)
+  } else {
+    throw error  // Re-throw للمعالجة في الطبقة العليا
+  }
+}
+
+▌9.3 قواعد Async/Await
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: .then().catch() متداخلة (Callback Hell)
+✅ إلزامي: async/await مع try/catch
+
+// ❌ خاطئ
+fetchUser()
+  .then(user => fetchContacts(user.id))
+  .then(contacts => fetchMessages(contacts[0].id))
+  .then(messages => console.log(messages))
+  .catch(err => console.error(err))
+
+// ✅ صحيح
+try {
+  const user = await fetchUser()
+  const contacts = await fetchContacts(user.id)
+  const messages = await fetchMessages(contacts[0].id)
+  console.log(messages)
+} catch (error) {
+  console.error(error)
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+10. قواعد Logging & Monitoring
+═══════════════════════════════════════════════════════════════════════════════
+
+▌10.1 مستويات الـ Logging
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEBUG:   معلومات تطويرية (مطورين فقط)
+INFO:    أحداث نظام طبيعية (تسجيل دخول، إنشاء سجل)
+WARN:    أحداث غير متوقعة لكنها ليست أخطاء (Retry، Timeout)
+ERROR:   أخطاء تؤثر على المستخدم (API failure، DB error)
+FATAL:   أخطاء تؤثر على النظام ككل (Crash، Out of Memory)
+
+▌10.2 قواعد Structured Logging
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: console.log('User created:', userId)
+✅ إلزامي: Structured JSON Logging
+
+// ✅ صحيح
+logger.info('Contact created', {
+  contactId: contact.id,
+  userId: contact.userId,
+  source: 'api',
+  duration: 45,  // ms
+  timestamp: new Date().toISOString(),
+})
+
+▌10.3 قواعد Correlation ID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: طلبات بدون Correlation ID
+✅ إلزامي: توليد Correlation ID لكل طلب ونقله عبر الخدمات
+
+// ✅ صحيح - middleware/correlation.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
+
+export function correlationMiddleware(request: NextRequest) {
+  const correlationId = request.headers.get('x-correlation-id') || randomUUID()
+  request.headers.set('x-correlation-id', correlationId)
+  
+  const response = NextResponse.next()
+  response.headers.set('x-correlation-id', correlationId)
+  return response
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+11. قواعد Performance
+═══════════════════════════════════════════════════════════════════════════════
+
+▌11.1 قواعد React Optimization
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: Re-render غير ضروري
+✅ إلزامي: استخدام memo, useMemo, useCallback
+
+// ✅ صحيح
+const MemoizedContactList = memo(ContactList, (prev, next) => {
+  return prev.contacts === next.contacts && prev.onSelect === next.onSelect
+})
+
+const filteredContacts = useMemo(() => {
+  return contacts.filter(c => c.name.includes(searchTerm))
+}, [contacts, searchTerm])
+
+const handleSelect = useCallback((id: string) => {
+  setSelectedId(id)
+}, [])
+
+▌11.2 قواعد Data Fetching
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: Waterfall Requests (طلبات متسلسلة)
+✅ إلزامي: Parallel Requests أو Server Components
+
+// ❌ خاطئ - Waterfall
+const user = await fetchUser()      // 100ms
+const contacts = await fetchContacts(user.id)  // 150ms (يبدأ بعد الأول)
+const campaigns = await fetchCampaigns(user.id) // 100ms (يبدأ بعد الثاني)
+// المجموع: 350ms
+
+// ✅ صحيح - Parallel
+const [user, campaigns] = await Promise.all([
+  fetchUser(),
+  fetchCampaigns(),
+])
+const contacts = await fetchContacts(user.id)
+// المجموع: 250ms
+
+▌11.3 قواعد Image Optimization
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: <img> عادية
+✅ إلزامي: <Image> من Next.js مع sizes و priority
+
+// ✅ صحيح
+import Image from 'next/image'
+
+<Image
+  src="/avatar.jpg"
+  alt="User Avatar"
+  width={40}
+  height={40}
+  priority={index < 5}  // priority للصور الأولى فقط
+  sizes="(max-width: 768px) 40px, 80px"
+  className="rounded-full"
+/>
+
+▌11.4 قواعد Bundle Size
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: استيراد مكتبات ضخمة كاملة
+✅ إلزامي: Tree Shaking و Dynamic Imports
+
+// ❌ خاطئ
+import * as lodash from 'lodash'  // 70KB
+
+// ✅ صحيح
+import debounce from 'lodash/debounce'  // 2KB
+
+// ✅ صحيح - Dynamic Import
+const HeavyChart = dynamic(() => import('./heavy-chart'), {
+  ssr: false,
+  loading: () => <Skeleton height={300} />,
+})
+
+═══════════════════════════════════════════════════════════════════════════════
+12. قواعد Security
+═══════════════════════════════════════════════════════════════════════════════
+
+▌12.1 قواعد Input Validation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: الثقة بأي مدخل من المستخدم
+✅ إلزامي: Validation على 3 مستويات:
+  1. Client-side (UX)
+  2. API Route (Zod)
+  3. Database (Constraints)
+
+▌12.2 قواعد Output Encoding
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: عرض بيانات المستخدم مباشرة
+✅ إلزامي: Escape/Encode قبل العرض
+
+// ✅ صحيح - React يقوم بـ Escape تلقائياً
+<div>{userInput}</div>  // ✅ آمن في React
+
+// ❌ خاطئ
+<div dangerouslySetInnerHTML={{ __html: userInput }} />  // ❌ خطير
+
+▌12.3 قواعد Authentication
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: تخزين JWT في localStorage
+✅ إلزامي: httpOnly Cookies + CSRF Protection
+
+// ✅ صحيح - lib/auth/session.ts
+import { getIronSession } from 'iron-session'
+
+export async function getSession(request: Request) {
+  const session = await getIronSession(request, response, {
+    password: process.env.SESSION_SECRET!,  // 32+ chars
+    cookieName: 'whatsapp-crm-session',
+    cookieOptions: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7,  // 7 days
+    },
+  })
+  return session
+}
+
+▌12.4 قواعد Authorization
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: التحقق من الصلاحيات في Client-side فقط
+✅ إلزامي: التحقق على Server-side في كل API Route
+
+// ✅ صحيح - middleware/rbac.ts
+export function requirePermission(permission: string) {
+  return async (request: NextRequest) => {
+    const session = await getSession(request)
+    if (!session?.user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const hasPermission = await checkPermission(session.user.id, permission)
+    if (!hasPermission) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    
+    return NextResponse.next()
+  }
+}
+
+▌12.5 قواعد Rate Limiting
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: API Routes بدون Rate Limiting
+✅ إلزامي: Rate Limiting على جميع API Routes
+
+// ✅ صحيح - lib/rate-limit.ts
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(100, '15 m'),
+  analytics: true,
+})
+
+export async function rateLimit(request: NextRequest) {
+  const ip = request.ip ?? '127.0.0.1'
+  const { success, limit, remaining, reset } = await ratelimit.limit(ip)
+  
+  if (!success) {
+    return Response.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: { 'X-RateLimit-Reset': reset.toString() } }
+    )
+  }
+  
+  const response = NextResponse.next()
+  response.headers.set('X-RateLimit-Limit', limit.toString())
+  response.headers.set('X-RateLimit-Remaining', remaining.toString())
+  return response
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+13. قواعد Testing
+═══════════════════════════════════════════════════════════════════════════════
+
+▌13.1 هرمية الاختبارات (Testing Pyramid)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        /
+       / \     E2E Tests (Playwright)        5%
+      /   \    ──────────────────────────
+     /     \   Integration Tests (Vitest)    15%
+    /       \  ──────────────────────────
+   /_________\ Unit Tests (Vitest + RTL)     80%
+
+▌13.2 قواعد Unit Tests
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: اختبار Implementation Details
+✅ إلزامي: اختبار Behavior (ما يفعله، لا كيف يفعله)
+
+// ❌ خاطئ - Testing Implementation
+it('should set state to loading', () => {
+  const { result } = renderHook(() => useContacts())
+  expect(result.current.isLoading).toBe(true)  // ❌ Implementation detail
+})
+
+// ✅ صحيح - Testing Behavior
+it('should display contacts after loading', async () => {
+  render(<ContactList />)
+  expect(screen.getByText('Loading...')).toBeInTheDocument()
+  await waitFor(() => {
+    expect(screen.getByText('John Doe')).toBeInTheDocument()
+  })
+})
+
+▌13.3 قواعد Test Coverage
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+الحد الأدنى:
+  - Lines: 85%
+  - Functions: 85%
+  - Branches: 80%
+  - Statements: 85%
+
+الملفات المستثناة:
+  - *.d.ts
+  - *.config.ts
+  - tests/
+  - src/app/api/ (تُختبر عبر Integration Tests)
+
+▌13.4 قواعد Mocking
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ ممنوع: Mock للمنطق الداخلي
+✅ إلزامي: Mock للـ Boundaries only (API, DB, External Services)
+
+// ✅ صحيح - Mock External Service
+vi.mock('@/lib/whatsapp/evolution-api', () => ({
+  EvolutionAPI: {
+    sendMessage: vi.fn().mockResolvedValue({ messageId: 'msg_123' }),
+  },
+}))
+
+// ❌ خاطئ - Mock Internal Logic
+vi.mock('@/services/contact-service', () => ({
+  ContactService: {
+    create: vi.fn(),  // ❌ لا تـ mock الخدمات الداخلية
+  },
+}))
+
+═══════════════════════════════════════════════════════════════════════════════
+14. قواعد Code Review
+═══════════════════════════════════════════════════════════════════════════════
+
+▌14.1 قائمة التحقق (Checklist)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+□ هل يتبع الكود قواعد التسمية؟
+□ هل يوجد Tests للكود الجديد؟
+□ هل التغطية الاختبارية ≥ 85%؟
+□ هل لا يوجد Console.log في الإنتاج؟
+□ هل تم التحقق من Security (Input validation, XSS, CSRF)؟
+□ هل تم التحقق من Performance (N+1, Re-renders, Bundle size)؟
+□ هل تم تحديث التوثيق؟
+□ هل التغييرات متوافقة مع RTL؟
+□ هل لا يوجد Secrets في الكود؟
+□ هل Error Handling مناسب؟
+
+▌14.2 معايير الموافقة (Approval Criteria)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 2 موافقات مطلوبة لـ PR
+• 1 موافقة من Lead Developer إلزامية
+• 0 Comments Unresolved
+• CI/CD يجب أن يكون أخضر (Green)
+• Coverage لا ينخفض عن الحد الأدنى
+
+═══════════════════════════════════════════════════════════════════════════════
+15. مخالفات وعقوبات
+═══════════════════════════════════════════════════════════════════════════════
+
+▌15.1 درجات المخالفات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 حرجة (Critical):
+   - تسريب Secrets في الكود
+   - SQL Injection
+   - XSS Vulnerabilities
+   - CSRF without protection
+   - عدم تشفير البيانات الحساسة
+   → العقوبة: رفض فوري + تدريب أمان إلزامي
+
+🟡 متوسطة (Medium):
+   - عدم وجود Tests
+   - N+1 Query
+   - Console.log في الإنتاج
+   - عدم التحقق من الصلاحيات
+   → العقوبة: رفض PR + إعادة مراجعة
+
+🟢 منخفضة (Low):
+   - أخطاء تنسيق (Formatting)
+   - أسماء غير واضحة
+   - تعليقات ناقصة
+   → العقوبة: تعليق + إصلاح قبل الدمج
+
+▌15.2 سجل المخالفات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+يتم تسجيل جميع المخالفات في:
+  - PR Comments
+  - Team Retrospective
+  - Personal Development Plan (للمخالفات المتكررة)
+
+═══════════════════════════════════════════════════════════════════════════════
+                          نهاية قواعد الهندسة المعمارية
+              "البرمجة هي فن تنظيم التعقيد" - Edsger Dijkstra
+═══════════════════════════════════════════════════════════════════════════════

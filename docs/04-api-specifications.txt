@@ -1,0 +1,1741 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    WHATSAPP CRM SYSTEM - مواصفات API
+                         API Specifications & Endpoints
+═══════════════════════════════════════════════════════════════════════════════
+
+📌 الإصدار: 1.0.0 | آخر تحديث: 2026-05-06
+📌 المعيار: RESTful API + JSON
+📌 المصادقة: JWT (Iron-Session) + API Keys
+📌 Rate Limiting: 100 req/min (عادي) | 1000 req/min (مميز)
+
+═══════════════════════════════════════════════════════════════════════════════
+جدول المحتويات
+═══════════════════════════════════════════════════════════════════════════════
+1. معايير API العامة
+2. مصادقة API (Authentication)
+3. API المستخدمين (Users)
+4. API جهات الاتصال (Contacts)
+5. API الرسائل (Messages)
+6. API الحملات (Campaigns)
+7. API واتساب (WhatsApp)
+8. API الأتمتة (Flows)
+9. API الفرق والأدوار (Teams & Roles)
+10. API التقارير (Analytics)
+11. Webhooks
+12. Error Codes & Responses
+13. Pagination & Filtering
+14. Rate Limiting Headers
+15. API Versioning
+
+═══════════════════════════════════════════════════════════════════════════════
+1. معايير API العامة
+═══════════════════════════════════════════════════════════════════════════════
+
+▌1.1 Base URL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+التطوير:  http://localhost:3000/api/v1
+الإنتاج:   https://api.whatsapp-crm.com/api/v1
+
+▌1.2 Headers المطلوبة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {jwt_token}  (أو Cookie: whatsapp-crm-session)
+X-API-Key: {api_key}               (للتكامل الخارجي)
+X-Correlation-ID: {uuid}           (لتتبع الطلبات)
+
+▌1.3 تنسيق الـ Response
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+جميع الـ Responses تتبع التنسيق الموحد:
+
+// ✅ نجاح
+{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+
+// ❌ خطأ
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable error message",
+    "details": [
+      { "field": "email", "message": "Invalid email format" }
+    ],
+    "requestId": "uuid-for-debugging"
+  }
+}
+
+▌1.4 HTTP Status Codes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+200 OK              → طلب ناجح
+201 Created         → تم الإنشاء بنجاح
+204 No Content      → تم الحذف بنجاح (بدون body)
+400 Bad Request     → بيانات غير صحيحة
+401 Unauthorized    → غير مصرح (تسجيل الدخول مطلوب)
+403 Forbidden       → ممنوع (صلاحيات غير كافية)
+404 Not Found       → المورد غير موجود
+409 Conflict        → تضارب في البيانات
+422 Unprocessable   → Validation Error
+429 Too Many Requests→ تجاوز الحد المسموح
+500 Internal Error  → خطأ في الخادم
+
+═══════════════════════════════════════════════════════════════════════════════
+2. مصادقة API (Authentication)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌2.1 تسجيل الدخول
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/auth/login
+
+Body:
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!",
+  "rememberMe": false
+}
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "admin",
+      "avatarUrl": "https://..."
+    },
+    "token": "jwt_token_here",
+    "expiresAt": "2026-05-13T10:00:00Z"
+  }
+}
+
+▌2.2 التسجيل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/auth/register
+
+Body:
+{
+  "email": "newuser@example.com",
+  "password": "SecurePassword123!",
+  "name": "New User",
+  "phone": "+966501234567",
+  "tenantName": "My Company"
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "user": { ... },
+    "tenant": { ... },
+    "message": "Registration successful. Please verify your email."
+  }
+}
+
+▌2.3 تسجيل الخروج
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/auth/logout
+
+Headers: Authorization: Bearer {token}
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Logged out successfully" }
+}
+
+▌2.4 تحديث التوكن
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/auth/refresh
+
+Body:
+{
+  "refreshToken": "refresh_token_here"
+}
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "token": "new_jwt_token",
+    "refreshToken": "new_refresh_token",
+    "expiresAt": "2026-05-13T10:00:00Z"
+  }
+}
+
+▌2.5 نسيت كلمة المرور
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/auth/forgot-password
+
+Body:
+{
+  "email": "user@example.com"
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Password reset link sent to your email" }
+}
+
+POST /api/v1/auth/reset-password
+
+Body:
+{
+  "token": "reset_token",
+  "password": "NewPassword123!",
+  "passwordConfirmation": "NewPassword123!"
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+3. API المستخدمين (Users)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌3.1 قائمة المستخدمين
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/users
+
+Query Parameters:
+  page: integer (default: 1)
+  limit: integer (default: 20, max: 100)
+  search: string (بحث بالاسم أو البريد)
+  role: string (filter by role)
+  status: string (active|inactive|suspended)
+  sortBy: string (created_at|name|email)
+  sortOrder: string (asc|desc)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "uuid",
+        "email": "user@example.com",
+        "name": "John Doe",
+        "role": "admin",
+        "status": "active",
+        "avatarUrl": "https://...",
+        "lastLoginAt": "2026-05-06T08:00:00Z",
+        "createdAt": "2026-01-01T00:00:00Z"
+      }
+    ]
+  },
+  "meta": { "page": 1, "limit": 20, "total": 50, "totalPages": 3 }
+}
+
+▌3.2 تفاصيل مستخدم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/users/:id
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "phone": "+966501234567",
+      "role": "admin",
+      "status": "active",
+      "avatarUrl": "https://...",
+      "preferences": { "language": "ar", "theme": "dark" },
+      "teams": [{ "id": "uuid", "name": "Sales Team" }],
+      "permissions": ["contacts.read", "contacts.write", "campaigns.read"],
+      "lastLoginAt": "2026-05-06T08:00:00Z",
+      "createdAt": "2026-01-01T00:00:00Z"
+    }
+  }
+}
+
+▌3.3 إنشاء مستخدم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/users
+
+Body:
+{
+  "email": "newuser@example.com",
+  "password": "TempPass123!",
+  "name": "New User",
+  "phone": "+966501234567",
+  "role": "user",
+  "teamIds": ["team-uuid-1", "team-uuid-2"]
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "user": { ... },
+    "message": "User created successfully. Temporary password sent to email."
+  }
+}
+
+▌3.4 تحديث مستخدم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATCH /api/v1/users/:id
+
+Body:
+{
+  "name": "Updated Name",
+  "phone": "+966509876543",
+  "role": "manager",
+  "status": "active",
+  "preferences": { "language": "en", "theme": "light" }
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "user": { ... }, "message": "User updated successfully" }
+}
+
+▌3.5 حذف مستخدم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/users/:id
+
+Response 204: (No Content)
+
+▌3.6 تحديث الصورة الشخصية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/users/:id/avatar
+
+Content-Type: multipart/form-data
+
+Body:
+  avatar: File (jpg, png, max 5MB)
+
+Response 200:
+{
+  "success": true,
+  "data": { "avatarUrl": "https://cdn.example.com/avatars/uuid.jpg" }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+4. API جهات الاتصال (Contacts)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌4.1 قائمة جهات الاتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/contacts
+
+Query Parameters:
+  page: integer (default: 1)
+  limit: integer (default: 20, max: 100)
+  search: string (بحث بالاسم أو الهاتف)
+  status: string (active|inactive|blocked)
+  tagIds: string[] (فلترة بالوسوم)
+  funnelStageId: string (فلترة بمرحلة القمع)
+  assignedTo: string (فلترة بالمسؤول)
+  source: string (manual|import|api|webhook)
+  sortBy: string (created_at|name|last_contact_at)
+  sortOrder: string (asc|desc)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "contacts": [
+      {
+        "id": "uuid",
+        "name": "Ahmed Mohammed",
+        "phone": "+966501234567",
+        "email": "ahmed@example.com",
+        "status": "active",
+        "source": "manual",
+        "funnelStage": { "id": "uuid", "name": "Qualified", "color": "#4CAF50" },
+        "assignedTo": { "id": "uuid", "name": "John Doe", "avatarUrl": "..." },
+        "tags": [
+          { "id": "uuid", "name": "Hot Lead", "color": "#FF5722" }
+        ],
+        "customFields": { "company": "ABC Corp", "job_title": "CEO" },
+        "lastContactAt": "2026-05-05T14:30:00Z",
+        "createdAt": "2026-04-01T00:00:00Z"
+      }
+    ]
+  },
+  "meta": { "page": 1, "limit": 20, "total": 150, "totalPages": 8 }
+}
+
+▌4.2 تفاصيل جهة اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/contacts/:id
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "contact": {
+      "id": "uuid",
+      "name": "Ahmed Mohammed",
+      "phone": "+966501234567",
+      "email": "ahmed@example.com",
+      "avatarUrl": "https://...",
+      "status": "active",
+      "source": "manual",
+      "funnelStage": { ... },
+      "assignedTo": { ... },
+      "tags": [ ... ],
+      "customFields": { ... },
+      "metadata": { "whatsapp_name": "Ahmed", "country": "SA" },
+      "recentMessages": [
+        {
+          "id": "uuid",
+          "content": "Hello, how are you?",
+          "direction": "inbound",
+          "status": "read",
+          "createdAt": "2026-05-05T14:30:00Z"
+        }
+      ],
+      "activities": [
+        {
+          "id": "uuid",
+          "action": "contact_updated",
+          "user": { "name": "John Doe" },
+          "createdAt": "2026-05-04T10:00:00Z"
+        }
+      ],
+      "createdAt": "2026-04-01T00:00:00Z",
+      "updatedAt": "2026-05-05T14:30:00Z"
+    }
+  }
+}
+
+▌4.3 إنشاء جهة اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/contacts
+
+Body:
+{
+  "name": "New Contact",
+  "phone": "+966501234567",
+  "email": "contact@example.com",
+  "funnelStageId": "uuid",
+  "assignedTo": "uuid",
+  "tagIds": ["tag-uuid-1", "tag-uuid-2"],
+  "customFields": {
+    "company": "XYZ Inc",
+    "job_title": "Manager"
+  },
+  "metadata": { "source": "website" }
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "contact": { ... },
+    "message": "Contact created successfully"
+  }
+}
+
+▌4.4 تحديث جهة اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATCH /api/v1/contacts/:id
+
+Body:
+{
+  "name": "Updated Name",
+  "funnelStageId": "new-stage-uuid",
+  "assignedTo": "new-user-uuid",
+  "tagIds": ["tag-uuid-3"],
+  "customFields": { "company": "Updated Corp" }
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "contact": { ... }, "message": "Contact updated successfully" }
+}
+
+▌4.5 حذف جهة اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/contacts/:id
+
+Response 204: (No Content)
+
+▌4.6 استيراد جهات اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/contacts/import
+
+Content-Type: multipart/form-data
+
+Body:
+  file: File (csv, xlsx, max 10MB)
+  tagIds: string[] (optional)
+  funnelStageId: string (optional)
+  skipDuplicates: boolean (default: true)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "importId": "uuid",
+    "total": 100,
+    "imported": 95,
+    "duplicates": 3,
+    "failed": 2,
+    "errors": [
+      { "row": 10, "reason": "Invalid phone number" },
+      { "row": 25, "reason": "Missing name" }
+    ]
+  }
+}
+
+▌4.7 تصدير جهات اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/contacts/export
+
+Query Parameters:
+  format: string (csv|xlsx|json)
+  status: string (optional)
+  tagIds: string[] (optional)
+  funnelStageId: string (optional)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "downloadUrl": "https://cdn.example.com/exports/contacts-uuid.csv",
+    "expiresAt": "2026-05-06T12:00:00Z"
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+5. API الرسائل (Messages)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌5.1 قائمة الرسائل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/messages
+
+Query Parameters:
+  page: integer
+  limit: integer
+  contactId: string (فلترة بجهة الاتصال)
+  sessionId: string (فلترة بالجلسة)
+  direction: string (inbound|outbound)
+  status: string (pending|sent|delivered|read|failed)
+  contentType: string (text|image|video|audio|document)
+  search: string (بحث في المحتوى)
+  dateFrom: string (YYYY-MM-DD)
+  dateTo: string (YYYY-MM-DD)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "uuid",
+        "contact": { "id": "uuid", "name": "Ahmed", "phone": "+966..." },
+        "session": { "id": "uuid", "name": "Main Account", "phone": "+966..." },
+        "direction": "inbound",
+        "status": "read",
+        "content": "Hello, I need help with my order",
+        "contentType": "text",
+        "mediaUrl": null,
+        "isAiGenerated": false,
+        "replyTo": null,
+        "sentAt": "2026-05-06T09:00:00Z",
+        "deliveredAt": "2026-05-06T09:00:05Z",
+        "readAt": "2026-05-06T09:05:00Z",
+        "createdAt": "2026-05-06T09:00:00Z"
+      }
+    ]
+  },
+  "meta": { "page": 1, "limit": 20, "total": 500 }
+}
+
+▌5.2 إرسال رسالة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/messages/send
+
+Body:
+{
+  "contactId": "uuid",
+  "sessionId": "uuid",
+  "content": "Hello, how can I help you today?",
+  "contentType": "text",
+  "replyToId": "uuid" (optional),
+  "useAi": false (optional)
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "message": {
+      "id": "uuid",
+      "status": "pending",
+      "content": "Hello, how can I help you today?",
+      "createdAt": "2026-05-06T09:00:00Z"
+    },
+    "messageId": "whatsapp-message-id"
+  }
+}
+
+▌5.3 إرسال رسالة وسائط
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/messages/send-media
+
+Content-Type: multipart/form-data
+
+Body:
+  contactId: string
+  sessionId: string
+  media: File (image, video, audio, document - max 50MB)
+  caption: string (optional)
+  replyToId: string (optional)
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "message": { ... },
+    "mediaUrl": "https://cdn.example.com/media/uuid.jpg"
+  }
+}
+
+▌5.4 تحديث حالة الرسالة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATCH /api/v1/messages/:id/status
+
+Body:
+{
+  "status": "read"
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": { ... }, "message": "Status updated" }
+}
+
+▌5.5 سجل المحادثة مع جهة اتصال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/contacts/:id/messages
+
+Query Parameters:
+  page: integer
+  limit: integer (default: 50, max: 100)
+  before: string (timestamp for pagination)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "messages": [ ... ],
+    "hasMore": true,
+    "nextCursor": "2026-05-05T10:00:00Z"
+  }
+}
+
+▌5.6 حذف رسالة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/messages/:id
+
+Response 204: (No Content)
+
+═══════════════════════════════════════════════════════════════════════════════
+6. API الحملات (Campaigns)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌6.1 قائمة الحملات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/campaigns
+
+Query Parameters:
+  page: integer
+  limit: integer
+  status: string (draft|scheduled|running|paused|completed|cancelled)
+  type: string (broadcast|scheduled|recurring)
+  search: string (بحث بالاسم)
+  sortBy: string (created_at|scheduled_at|name)
+  sortOrder: string (asc|desc)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "campaigns": [
+      {
+        "id": "uuid",
+        "name": "Summer Sale 2026",
+        "description": "Promotional campaign for summer products",
+        "type": "broadcast",
+        "status": "running",
+        "content": "Get 50% off on all summer products! 🌞",
+        "contentType": "text",
+        "scheduledAt": "2026-05-06T10:00:00Z",
+        "startedAt": "2026-05-06T10:00:00Z",
+        "completedAt": null,
+        "totalRecipients": 1000,
+        "sentCount": 750,
+        "deliveredCount": 700,
+        "readCount": 500,
+        "failedCount": 50,
+        "progress": 75,
+        "createdBy": { "id": "uuid", "name": "John Doe" },
+        "createdAt": "2026-05-05T00:00:00Z"
+      }
+    ]
+  },
+  "meta": { "page": 1, "limit": 20, "total": 10 }
+}
+
+▌6.2 تفاصيل حملة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/campaigns/:id
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "campaign": {
+      "id": "uuid",
+      "name": "Summer Sale 2026",
+      "description": "...",
+      "type": "broadcast",
+      "status": "running",
+      "content": "Get 50% off!",
+      "contentType": "text",
+      "template": null,
+      "mediaUrl": null,
+      "scheduledAt": "2026-05-06T10:00:00Z",
+      "startedAt": "2026-05-06T10:00:00Z",
+      "completedAt": null,
+      "stats": {
+        "total": 1000,
+        "sent": 750,
+        "delivered": 700,
+        "read": 500,
+        "failed": 50,
+        "pending": 200
+      },
+      "recipients": {
+        "page": 1,
+        "limit": 20,
+        "total": 1000,
+        "data": [
+          {
+            "id": "uuid",
+            "contact": { "name": "Ahmed", "phone": "+966..." },
+            "status": "delivered",
+            "sentAt": "2026-05-06T10:00:00Z",
+            "deliveredAt": "2026-05-06T10:00:05Z"
+          }
+        ]
+      },
+      "createdBy": { ... },
+      "createdAt": "2026-05-05T00:00:00Z"
+    }
+  }
+}
+
+▌6.3 إنشاء حملة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/campaigns
+
+Body:
+{
+  "name": "New Campaign",
+  "description": "Campaign description",
+  "type": "broadcast",
+  "content": "Hello {{name}}, check out our new offers!",
+  "contentType": "text",
+  "templateId": null,
+  "mediaUrl": null,
+  "scheduledAt": "2026-05-07T10:00:00Z",
+  "recipientFilter": {
+    "tagIds": ["tag-uuid-1"],
+    "funnelStageIds": ["stage-uuid-1"],
+    "status": "active"
+  }
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "campaign": { ... },
+    "recipientCount": 500,
+    "message": "Campaign created with 500 recipients"
+  }
+}
+
+▌6.4 تحديث حملة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATCH /api/v1/campaigns/:id
+
+Body:
+{
+  "name": "Updated Campaign Name",
+  "content": "Updated content",
+  "scheduledAt": "2026-05-08T10:00:00Z"
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "campaign": { ... }, "message": "Campaign updated" }
+}
+
+▌6.5 إلغاء/حذف حملة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/campaigns/:id/cancel
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Campaign cancelled successfully" }
+}
+
+DELETE /api/v1/campaigns/:id
+
+Response 204: (No Content)
+
+▌6.6 إعادة إرسال فاشل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/campaigns/:id/retry-failed
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "retryCount": 50,
+    "message": "Retrying 50 failed messages"
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+7. API واتساب (WhatsApp)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌7.1 قائمة الجلسات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/whatsapp/sessions
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "sessions": [
+      {
+        "id": "uuid",
+        "name": "Main Business Account",
+        "phoneNumber": "+966501234567",
+        "provider": "evolution",
+        "status": "connected",
+        "lastActivityAt": "2026-05-06T08:00:00Z",
+        "createdAt": "2026-01-01T00:00:00Z"
+      }
+    ]
+  }
+}
+
+▌7.2 إنشاء جلسة جديدة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/whatsapp/sessions
+
+Body:
+{
+  "name": "New Session",
+  "phoneNumber": "+966509876543",
+  "provider": "evolution",
+  "providerConfig": {
+    "webhookUrl": "https://...",
+    "apiKey": "..."
+  }
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "session": { ... },
+    "qrCode": "data:image/png;base64,...",  // للربط
+    "message": "Scan QR code to connect"
+  }
+}
+
+▌7.3 الحصول على QR Code
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/whatsapp/sessions/:id/qr
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "qrCode": "data:image/png;base64,...",
+    "expiresAt": "2026-05-06T09:00:00Z"
+  }
+}
+
+▌7.4 فصل الجلسة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/whatsapp/sessions/:id/disconnect
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Session disconnected" }
+}
+
+▌7.5 حذف الجلسة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/whatsapp/sessions/:id
+
+Response 204: (No Content)
+
+▌7.6 Webhook لواتساب
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/webhooks/whatsapp/:provider
+
+Headers:
+  X-Webhook-Signature: string (للتحقق)
+
+Body (Evolution API):
+{
+  "event": "messages.upsert",
+  "data": {
+    "key": { "remoteJid": "966501234567@s.whatsapp.net", "id": "msg-id" },
+    "message": { "conversation": "Hello" },
+    "messageTimestamp": 1714982400
+  }
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Webhook processed" }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+8. API الأتمتة (Flows)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌8.1 قائمة السيناريوهات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/flows
+
+Query Parameters:
+  page: integer
+  limit: integer
+  status: string (draft|active|paused|archived)
+  triggerType: string (keyword|webhook|schedule|new_contact|message_received)
+  search: string
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "flows": [
+      {
+        "id": "uuid",
+        "name": "Welcome Message Flow",
+        "description": "Send welcome message to new contacts",
+        "triggerType": "new_contact",
+        "triggerConfig": { ... },
+        "status": "active",
+        "executionCount": 150,
+        "successCount": 145,
+        "failCount": 5,
+        "createdBy": { "name": "John Doe" },
+        "createdAt": "2026-04-01T00:00:00Z"
+      }
+    ]
+  }
+}
+
+▌8.2 تفاصيل سيناريو
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/flows/:id
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "flow": {
+      "id": "uuid",
+      "name": "Welcome Message Flow",
+      "description": "...",
+      "triggerType": "new_contact",
+      "triggerConfig": { "keywords": ["hello", "hi"] },
+      "status": "active",
+      "nodes": [
+        {
+          "id": "node-1",
+          "type": "trigger",
+          "position": { "x": 100, "y": 100 },
+          "data": { "triggerType": "keyword", "keywords": ["hello"] }
+        },
+        {
+          "id": "node-2",
+          "type": "send_message",
+          "position": { "x": 300, "y": 100 },
+          "data": { "content": "Welcome! How can we help you?" }
+        },
+        {
+          "id": "node-3",
+          "type": "ai_response",
+          "position": { "x": 500, "y": 100 },
+          "data": { "model": "gpt-4", "prompt": "..." }
+        }
+      ],
+      "edges": [
+        { "id": "edge-1", "source": "node-1", "target": "node-2" },
+        { "id": "edge-2", "source": "node-2", "target": "node-3" }
+      ],
+      "variables": { "userName": "{{contact.name}}" },
+      "executionCount": 150,
+      "successCount": 145,
+      "failCount": 5,
+      "createdBy": { ... },
+      "createdAt": "2026-04-01T00:00:00Z",
+      "updatedAt": "2026-05-01T00:00:00Z"
+    }
+  }
+}
+
+▌8.3 إنشاء/تحديث سيناريو
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/flows
+
+Body:
+{
+  "name": "New Flow",
+  "description": "Flow description",
+  "triggerType": "keyword",
+  "triggerConfig": { "keywords": ["help", "support"] },
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "trigger",
+      "position": { "x": 100, "y": 100 },
+      "data": { "triggerType": "keyword", "keywords": ["help"] }
+    },
+    {
+      "id": "node-2",
+      "type": "send_message",
+      "position": { "x": 300, "y": 100 },
+      "data": { "content": "How can we help you today?" }
+    }
+  ],
+  "edges": [
+    { "id": "edge-1", "source": "node-1", "target": "node-2" }
+  ],
+  "variables": {}
+}
+
+Response 201:
+{
+  "success": true,
+  "data": { "flow": { ... }, "message": "Flow created" }
+}
+
+PATCH /api/v1/flows/:id
+
+Response 200:
+{
+  "success": true,
+  "data": { "flow": { ... }, "message": "Flow updated" }
+}
+
+▌8.4 تفعيل/إيقاف سيناريو
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/flows/:id/activate
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Flow activated" }
+}
+
+POST /api/v1/flows/:id/deactivate
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Flow deactivated" }
+}
+
+▌8.5 حذف سيناريو
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/flows/:id
+
+Response 204: (No Content)
+
+▌8.6 تنفيذ سيناريو يدوياً
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/flows/:id/execute
+
+Body:
+{
+  "contactId": "uuid",
+  "sessionId": "uuid",
+  "variables": { "customVar": "value" }
+}
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "executionId": "uuid",
+    "status": "running",
+    "message": "Flow execution started"
+  }
+}
+
+▌8.7 سجل تنفيذات السيناريو
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/flows/:id/executions
+
+Query Parameters:
+  page: integer
+  limit: integer
+  status: string (running|completed|failed|cancelled|waiting)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "executions": [
+      {
+        "id": "uuid",
+        "contact": { "name": "Ahmed", "phone": "+966..." },
+        "status": "completed",
+        "startedAt": "2026-05-06T09:00:00Z",
+        "completedAt": "2026-05-06T09:00:10Z",
+        "duration": 10000
+      }
+    ]
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+9. API الفرق والأدوار (Teams & Roles)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌9.1 قائمة الفرق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/teams
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "teams": [
+      {
+        "id": "uuid",
+        "name": "Sales Team",
+        "description": "Main sales team",
+        "color": "#4CAF50",
+        "memberCount": 5,
+        "members": [
+          { "id": "uuid", "name": "John Doe", "role": "lead", "avatarUrl": "..." }
+        ],
+        "createdAt": "2026-01-01T00:00:00Z"
+      }
+    ]
+  }
+}
+
+▌9.2 إنشاء فريق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/teams
+
+Body:
+{
+  "name": "Support Team",
+  "description": "Customer support team",
+  "color": "#2196F3",
+  "memberIds": ["user-uuid-1", "user-uuid-2"]
+}
+
+Response 201:
+{
+  "success": true,
+  "data": { "team": { ... }, "message": "Team created" }
+}
+
+▌9.3 إضافة عضو للفريق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/teams/:id/members
+
+Body:
+{
+  "userId": "uuid",
+  "role": "member"  // lead|member|viewer
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Member added to team" }
+}
+
+▌9.4 إزالة عضو من الفريق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/teams/:id/members/:userId
+
+Response 204: (No Content)
+
+▌9.5 قائمة الأدوار
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/roles
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "roles": [
+      {
+        "id": "uuid",
+        "name": "Admin",
+        "description": "Full system access",
+        "permissions": [
+          "users.*",
+          "contacts.*",
+          "campaigns.*",
+          "flows.*",
+          "settings.*"
+        ],
+        "isSystem": true,
+        "userCount": 2
+      }
+    ]
+  }
+}
+
+▌9.6 إنشاء دور
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/roles
+
+Body:
+{
+  "name": "Campaign Manager",
+  "description": "Can manage campaigns only",
+  "permissions": [
+    "contacts.read",
+    "campaigns.*",
+    "messages.read",
+    "messages.write"
+  ]
+}
+
+Response 201:
+{
+  "success": true,
+  "data": { "role": { ... }, "message": "Role created" }
+}
+
+▌9.7 تعيين دور لمستخدم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/users/:id/roles
+
+Body:
+{
+  "roleIds": ["role-uuid-1", "role-uuid-2"]
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "message": "Roles assigned" }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+10. API التقارير (Analytics)
+═══════════════════════════════════════════════════════════════════════════════
+
+▌10.1 لوحة التحكم الرئيسية
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/analytics/dashboard
+
+Query Parameters:
+  dateFrom: string (YYYY-MM-DD)
+  dateTo: string (YYYY-MM-DD)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "overview": {
+      "totalContacts": 1500,
+      "totalMessages": 25000,
+      "activeCampaigns": 3,
+      "connectedSessions": 2
+    },
+    "messageStats": {
+      "inbound": 12000,
+      "outbound": 13000,
+      "delivered": 12500,
+      "read": 10000,
+      "failed": 500
+    },
+    "contactGrowth": [
+      { "date": "2026-05-01", "count": 100 },
+      { "date": "2026-05-02", "count": 150 },
+      { "date": "2026-05-03", "count": 120 }
+    ],
+    "messageActivity": [
+      { "date": "2026-05-01", "inbound": 500, "outbound": 600 },
+      { "date": "2026-05-02", "inbound": 550, "outbound": 650 }
+    ],
+    "funnelDistribution": [
+      { "stage": "New", "count": 500, "percentage": 33 },
+      { "stage": "Contacted", "count": 300, "percentage": 20 },
+      { "stage": "Qualified", "count": 400, "percentage": 27 },
+      { "stage": "Proposal", "count": 200, "percentage": 13 },
+      { "stage": "Won", "count": 100, "percentage": 7 }
+    ],
+    "topTags": [
+      { "tag": "Hot Lead", "count": 300 },
+      { "tag": "VIP", "count": 150 }
+    ],
+    "teamPerformance": [
+      { "team": "Sales Team", "messagesSent": 5000, "responseRate": 95 },
+      { "team": "Support Team", "messagesSent": 3000, "responseRate": 98 }
+    ]
+  }
+}
+
+▌10.2 تقرير الرسائل
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/analytics/messages
+
+Query Parameters:
+  dateFrom: string
+  dateTo: string
+  groupBy: string (day|week|month)
+  contactId: string (optional)
+  sessionId: string (optional)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "total": 25000,
+      "inbound": 12000,
+      "outbound": 13000,
+      "delivered": 12500,
+      "read": 10000,
+      "failed": 500,
+      "averageResponseTime": 300  // seconds
+    },
+    "trends": [
+      { "date": "2026-05-01", "inbound": 500, "outbound": 600, "delivered": 580, "read": 500 },
+      { "date": "2026-05-02", "inbound": 550, "outbound": 650, "delivered": 630, "read": 550 }
+    ],
+    "byHour": [
+      { "hour": 0, "count": 50 },
+      { "hour": 1, "count": 30 },
+      // ... 24 hours
+    ],
+    "byDayOfWeek": [
+      { "day": "Sunday", "count": 4000 },
+      { "day": "Monday", "count": 3500 }
+    ]
+  }
+}
+
+▌10.3 تقرير الحملات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/analytics/campaigns
+
+Query Parameters:
+  dateFrom: string
+  dateTo: string
+  campaignId: string (optional)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalCampaigns": 10,
+      "totalSent": 50000,
+      "totalDelivered": 48000,
+      "totalRead": 35000,
+      "totalFailed": 2000,
+      "averageDeliveryRate": 96,
+      "averageReadRate": 70
+    },
+    "campaigns": [
+      {
+        "id": "uuid",
+        "name": "Summer Sale",
+        "sent": 10000,
+        "delivered": 9500,
+        "read": 7000,
+        "failed": 500,
+        "deliveryRate": 95,
+        "readRate": 70,
+        "cost": 500  // if applicable
+      }
+    ]
+  }
+}
+
+▌10.4 تقرير الفريق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/analytics/teams
+
+Query Parameters:
+  dateFrom: string
+  dateTo: string
+  teamId: string (optional)
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "teams": [
+      {
+        "id": "uuid",
+        "name": "Sales Team",
+        "members": [
+          {
+            "id": "uuid",
+            "name": "John Doe",
+            "messagesSent": 2000,
+            "messagesReceived": 1800,
+            "averageResponseTime": 120,
+            "contactsHandled": 500,
+            "satisfactionRate": 4.5
+          }
+        ],
+        "totalMessages": 10000,
+        "totalContacts": 2000,
+        "averageResponseTime": 150
+      }
+    ]
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+11. Webhooks
+═══════════════════════════════════════════════════════════════════════════════
+
+▌11.1 تسجيل Webhook
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/v1/webhooks
+
+Body:
+{
+  "url": "https://your-app.com/webhooks/whatsapp-crm",
+  "events": ["message.received", "message.sent", "contact.created", "campaign.completed"],
+  "secret": "your_webhook_secret",
+  "isActive": true
+}
+
+Response 201:
+{
+  "success": true,
+  "data": {
+    "webhook": {
+      "id": "uuid",
+      "url": "https://your-app.com/webhooks/whatsapp-crm",
+      "events": ["message.received", ...],
+      "isActive": true,
+      "createdAt": "2026-05-06T00:00:00Z"
+    }
+  }
+}
+
+▌11.2 قائمة Webhooks
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/webhooks
+
+Response 200:
+{
+  "success": true,
+  "data": {
+    "webhooks": [
+      {
+        "id": "uuid",
+        "url": "https://...",
+        "events": ["message.received"],
+        "isActive": true,
+        "lastTriggeredAt": "2026-05-06T09:00:00Z",
+        "successRate": 99.5
+      }
+    ]
+  }
+}
+
+▌11.3 تحديث Webhook
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATCH /api/v1/webhooks/:id
+
+Body:
+{
+  "url": "https://new-url.com/webhook",
+  "events": ["message.received", "contact.created"],
+  "isActive": false
+}
+
+Response 200:
+{
+  "success": true,
+  "data": { "webhook": { ... }, "message": "Webhook updated" }
+}
+
+▌11.4 حذف Webhook
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELETE /api/v1/webhooks/:id
+
+Response 204: (No Content)
+
+▌11.5 تنسيق Webhook Events
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// message.received
+{
+  "event": "message.received",
+  "timestamp": "2026-05-06T09:00:00Z",
+  "data": {
+    "messageId": "uuid",
+    "contactId": "uuid",
+    "sessionId": "uuid",
+    "content": "Hello",
+    "contentType": "text",
+    "direction": "inbound",
+    "createdAt": "2026-05-06T09:00:00Z"
+  }
+}
+
+// campaign.completed
+{
+  "event": "campaign.completed",
+  "timestamp": "2026-05-06T10:00:00Z",
+  "data": {
+    "campaignId": "uuid",
+    "campaignName": "Summer Sale",
+    "totalRecipients": 1000,
+    "sentCount": 1000,
+    "deliveredCount": 950,
+    "readCount": 700,
+    "failedCount": 50
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+12. Error Codes & Responses
+═══════════════════════════════════════════════════════════════════════════════
+
+▌12.1 قائمة أكواد الأخطاء
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AUTH_001: Invalid credentials
+AUTH_002: Token expired
+AUTH_003: Token invalid
+AUTH_004: Account suspended
+AUTH_005: Email not verified
+AUTH_006: Invalid refresh token
+
+VALID_001: Invalid input data
+VALID_002: Missing required field
+VALID_003: Invalid email format
+VALID_004: Invalid phone number
+VALID_005: Password too weak
+VALID_006: Invalid UUID format
+
+RES_001: Resource not found
+RES_002: Resource already exists
+RES_003: Resource conflict
+RES_004: Resource forbidden
+RES_005: Resource deleted
+
+RATE_001: Rate limit exceeded
+RATE_002: Quota exceeded
+
+WHATSAPP_001: Session not connected
+WHATSAPP_002: Failed to send message
+WHATSAPP_003: Invalid phone number
+WHATSAPP_004: Media upload failed
+WHATSAPP_005: QR code expired
+
+CAMPAIGN_001: Campaign already running
+CAMPAIGN_002: No recipients found
+CAMPAIGN_003: Invalid schedule time
+CAMPAIGN_004: Campaign limit exceeded
+
+FLOW_001: Invalid flow configuration
+FLOW_002: Flow execution failed
+FLOW_003: Circular dependency detected
+FLOW_004: Invalid node type
+
+INTERNAL_001: Database error
+INTERNAL_002: External service error
+INTERNAL_003: Unknown error
+
+▌12.2 أمثلة على أخطاء شائعة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 400 Bad Request
+{
+  "success": false,
+  "error": {
+    "code": "VALID_001",
+    "message": "Invalid input data",
+    "details": [
+      { "field": "email", "message": "Invalid email format" },
+      { "field": "phone", "message": "Phone number must start with +" }
+    ],
+    "requestId": "req-uuid-123"
+  }
+}
+
+// 401 Unauthorized
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_002",
+    "message": "Token expired. Please login again.",
+    "requestId": "req-uuid-123"
+  }
+}
+
+// 403 Forbidden
+{
+  "success": false,
+  "error": {
+    "code": "RES_004",
+    "message": "You don't have permission to access this resource",
+    "requestId": "req-uuid-123"
+  }
+}
+
+// 429 Too Many Requests
+{
+  "success": false,
+  "error": {
+    "code": "RATE_001",
+    "message": "Rate limit exceeded. Please try again in 15 minutes.",
+    "requestId": "req-uuid-123"
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+13. Pagination & Filtering
+═══════════════════════════════════════════════════════════════════════════════
+
+▌13.1 Pagination
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+المعلمات:
+  page: integer (default: 1)
+  limit: integer (default: 20, max: 100)
+
+الاستجابة:
+  meta: {
+    page: 1,
+    limit: 20,
+    total: 150,
+    totalPages: 8,
+    hasNext: true,
+    hasPrev: false
+  }
+
+▌13.2 Cursor-based Pagination (للسجلات الكبيرة)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+المعلمات:
+  cursor: string (timestamp or id)
+  limit: integer
+
+الاستجابة:
+  {
+    "data": [ ... ],
+    "hasMore": true,
+    "nextCursor": "2026-05-05T10:00:00Z"
+  }
+
+▌13.3 Filtering
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+المعاملات:
+  search: string (بحث عام)
+  status: string (فلترة بحالة)
+  dateFrom: string (YYYY-MM-DD)
+  dateTo: string (YYYY-MM-DD)
+  sortBy: string (عمود الترتيب)
+  sortOrder: string (asc|desc)
+
+▌13.4 Advanced Filtering
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/v1/contacts?filter[status]=active&filter[tagIds][]=uuid1&filter[tagIds][]=uuid2
+
+أو باستخدام JSON:
+GET /api/v1/contacts?filter={"status":"active","tagIds":["uuid1","uuid2"]}
+
+═══════════════════════════════════════════════════════════════════════════════
+14. Rate Limiting Headers
+═══════════════════════════════════════════════════════════════════════════════
+
+▌14.1 Headers المُرسلة
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1714986000
+X-RateLimit-Retry-After: 900
+
+▌14.2 استجابة تجاوز الحد
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: 429 Too Many Requests
+Headers:
+  X-RateLimit-Limit: 100
+  X-RateLimit-Remaining: 0
+  X-RateLimit-Reset: 1714986000
+  X-RateLimit-Retry-After: 900
+  Retry-After: 900
+
+Body:
+{
+  "success": false,
+  "error": {
+    "code": "RATE_001",
+    "message": "Rate limit exceeded. Please try again in 15 minutes.",
+    "details": {
+      "limit": 100,
+      "resetAt": "2026-05-06T09:00:00Z"
+    }
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+15. API Versioning
+═══════════════════════════════════════════════════════════════════════════════
+
+▌15.1 استراتيجية الإصدارات
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• URL Versioning: /api/v1/... /api/v2/...
+• Header Versioning: Accept: application/vnd.whatsapp-crm.v1+json
+• Deprecation: Headers مع تاريخ الإيقاف
+
+▌15.2 Headers التوافق
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+API-Version: v1
+Deprecation: true
+Sunset: Sat, 01 Jan 2027 00:00:00 GMT
+
+▌15.3 سياسة الإيقاف
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• إشعار مسبق: 6 أشهر قبل الإيقاف
+• Documentation: توثيق كامل للتغييرات
+• Migration Guide: دليل الهجرة بين الإصدارات
+• Support: دعم الإصدار السابق لمدة 12 شهر
+
+═══════════════════════════════════════════════════════════════════════════════
+                          نهاية مواصفات API
+              "API جيد هو API يُفهم بدون توثيق" - خبير الأنظمة
+═══════════════════════════════════════════════════════════════════════════════
