@@ -33,7 +33,7 @@ export default async function RolesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {roles.map((role) => (
+        {roles.map((role: any) => (
           <RoleCard 
             key={role.id} 
             role={role} 

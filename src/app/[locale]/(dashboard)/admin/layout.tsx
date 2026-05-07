@@ -23,7 +23,7 @@ export default async function AdminLayout({
   const tabs = [
     { name: t("users_tab"), href: `/admin/users`, iconName: "Users" as const },
     { name: t("depts_tab"), href: `/admin/departments`, iconName: "Building2" as const },
-    { name: t("roles_tab"), href: `/admin/roles`, iconName: "ShieldLock" as const },
+    { name: t("roles_tab"), href: `/admin/roles`, iconName: "Shield" as const },
   ];
 
   return (
