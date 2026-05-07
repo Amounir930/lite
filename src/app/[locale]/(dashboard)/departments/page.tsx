@@ -43,7 +43,7 @@ export default async function DepartmentsPage({
 
       {/* 🏢 Departments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {departments.map((dept) => (
+        {departments.map((dept: any) => (
           <div key={dept.id} className="soft-card group hover:border-primary/20 transition-all p-0 overflow-hidden">
             <div className="p-8 border-b border-border-subtle bg-bg-surface/50">
               <div className="flex items-center justify-between mb-6">
@@ -64,7 +64,7 @@ export default async function DepartmentsPage({
                 {t("teams")} ({dept.teams.length})
               </h4>
               <div className="flex flex-wrap gap-2">
-                {dept.teams.map((team) => (
+                {dept.teams.map((team: any) => (
                   <div key={team.id} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-bg-base border border-border-subtle text-sm text-text-main hover:border-primary/30 transition-all cursor-default">
                     <div className="size-1.5 rounded-full bg-primary"></div>
                     {team.name}

@@ -26,7 +26,7 @@ const sidebarItems = [
   { name: "الإعدادات", href: "/settings", icon: Settings, permission: "PAGE_SETTINGS" },
 ];
 
-export function Sidebar({ userPermissions = [] }: { userPermissions?: string[] }) {
+export function Sidebar({ userPermissions = [], roleName = "Guest" }: { userPermissions?: string[]; roleName?: string }) {
   const pathname = usePathname();
 
   // 🛡️ Expert Logic: Always show Admin for testing or if permissions match

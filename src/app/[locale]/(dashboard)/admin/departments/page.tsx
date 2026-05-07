@@ -58,7 +58,7 @@ export default async function DepartmentsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {departments.map((dept) => {
+        {departments.map((dept: any) => {
           const deptId = getSafeId(dept);
           return (
             <div key={deptId} className="soft-card group hover:border-primary/20 transition-all p-0 overflow-hidden text-start bg-bg-surface/30 backdrop-blur-sm relative">

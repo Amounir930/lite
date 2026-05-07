@@ -64,6 +64,7 @@ model User {
   passwordHash String
   status       String      @default("active")
   createdAt    DateTime    @default(now())
+}
 
 model Invite {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
