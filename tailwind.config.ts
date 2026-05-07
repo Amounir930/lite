@@ -6,14 +6,16 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: ["class", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
         primary: "#3b82f6",
-        secondary: "#10b981",
-        accent: "#f43f5e",
-        background: "#0a0a0b",
-        surface: "#161618",
+        "bg-base": "var(--bg-base)",
+        "bg-surface": "var(--bg-surface)",
+        "text-main": "var(--text-main)",
+        "text-muted": "var(--text-muted)",
+        "border-subtle": "var(--border-subtle)",
       },
     },
   },

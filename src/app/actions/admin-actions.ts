@@ -113,6 +113,21 @@ export async function createDepartmentAction(name: string, slug: string) {
   } catch (error) { return { error: "فشل الإنشاء." }; }
 }
 
+export async function updateDepartmentAction(deptId: string, data: any) {
+  try {
+    const prismaAny = prisma as any;
+    await prismaAny.$runCommandRaw({
+      update: "Department",
+      updates: [{
+        q: { _id: toObjectId(deptId) },
+        u: { $set: { name: data.name, updatedAt: new Date().toISOString() } }
+      }]
+    });
+    revalidatePath("/admin/departments");
+    return { success: true };
+  } catch (error) { return { error: "فشل التحديث." }; }
+}
+
 export async function deleteDepartmentAction(deptId: string) {
   try {
     const prismaAny = prisma as any;

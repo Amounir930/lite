@@ -3,8 +3,8 @@ import { prisma } from "@/infra/db/prisma";
 import { getSession } from "@/infra/auth/session";
 import dynamic from "next/dynamic";
 
-const AddUserModal = dynamic(() => import("@/components/layout/AddUserModal").then(m => m.AddUserModal), { ssr: false });
-const EditUserModal = dynamic(() => import("@/components/layout/EditUserModal").then(m => m.EditUserModal), { ssr: false });
+const AddUserModal = dynamic(() => import("@/components/layout/AddUserModal").then(m => m.AddUserModal));
+const EditUserModal = dynamic(() => import("@/components/layout/EditUserModal").then(m => m.EditUserModal));
 
 export default async function UsersPage() {
   const session = await getSession();
